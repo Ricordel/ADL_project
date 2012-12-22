@@ -1,5 +1,6 @@
 #include <vector>
 
+
 #include "FuncGenerator.hpp"
 
 
@@ -42,23 +43,27 @@ void find_max_functions_for(FuncGenerator& generator, std::ostream& outStream)
         uint32_t maxLength = generator.getMaxPossibleLength();
 
         std::vector<Function *> maxFunctions;
-        Function *curFunc;
+        Function *pCurFunc;
 
 
         while (moreFuncs) {
                 try {
                         /* Allocated on the heap, from now on we are responsible for it */
-                        curFunc = generator.getNextFunction();
+                        pCurFunc = generator.getNextFunction();
 
-                        //XXX for debug only !
-#if 0
-                        if (curFunc->getCycleLength() == maxLength) {
-                                maxFunctions.push_back(curFunc);
+                        //XXX debug
+                        std::cout << "Checking " << pCurFunc->toPrettyString() << std::endl;
+
+                        //if (pCurFunc->getCycleLength() == maxLength) {
+                        uint32_t l = pCurFunc->getCycleLength();
+                        std::cout << "Length: " << l << std::endl << std::endl;
+
+                        if (l == maxLength) {
+                                maxFunctions.push_back(pCurFunc);
                         } else {
-                                delete curFunc;
+                                delete pCurFunc;
                         }
-#endif
-                        maxFunctions.push_back(curFunc);
+
                 } catch (NoMoreFunctionsException& e) {
                         moreFuncs = false;
                 } /* Any other exception goes up */

@@ -5,10 +5,20 @@
 #include <iostream>
 
 
+/* 
+ * Return the bit nBit of val in first position. That is, the return
+ * value of this function is either 0 or 1.
+ */
+static inline uint32_t bit(uint32_t nBit, uint32_t val)
+{
+        return (val >> nBit) & 1;
+}
+
 
 class Function
 {
         public:
+                Function(uint32_t nVariables);
                 virtual ~Function();
 
                 /* This produces the canonical form required for the project,
@@ -25,21 +35,27 @@ class Function
                 virtual bool isCanonicalForm() const = 0;
 
                 /* Return the length of the NLFSR cycle for this particular function */
-                inline uint32_t getCycleLength() const {
-                        int length = 0;
-                        while (this->nextVal() != startVal) {
+                inline uint32_t getCycleLength() {
+                        int length = 1;
+                        m_curVal = m_startVal;
+                        std::cout << m_curVal << " ";
+                        while (this->nextVal() != m_startVal) {
+                                std::cout << m_curVal << " ";
                                 length++;
                         }
+                        //XXX
+                        std::cout << std::endl;
 
                         return length;
                 }
 
         protected:
-                uint32_t curVal;
-                uint32_t startVal = 1;
+                uint32_t m_curVal;
+                uint32_t m_startVal = 1;
+                uint32_t m_nVariables;
                 
-                /* Side effects on the curVal member AND returns its value */
-                virtual uint32_t nextVal() const = 0;
+                /* Side effects on the m_curVal member AND returns its value */
+                virtual uint32_t nextVal() = 0;
 };
 
 
@@ -51,7 +67,7 @@ class Function_0_a_b_cd : public Function
                 Function_0_a_b_cd();
                 Function_0_a_b_cd(Function_0_a_b_cd& other);
                 Function_0_a_b_cd(const Function_0_a_b_cd& other);
-                Function_0_a_b_cd(uint32_t a, uint32_t b, uint32_t c, uint32_t d);
+                Function_0_a_b_cd(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t m_nVariables);
                 virtual ~Function_0_a_b_cd();
 
                 virtual std::string toString() const;
@@ -66,10 +82,15 @@ class Function_0_a_b_cd : public Function
                 bool smaller_or_equal(Function_0_a_b_cd other) const;
 
         protected:
-                virtual inline uint32_t nextVal() const {
-                        std::cout << "Mettre la génération à la Elena ici" << std::endl;
-                        return 0;
+                virtual inline uint32_t nextVal() {
+                        uint32_t newBit = bit(0, m_curVal) ^ bit(m_a, m_curVal) ^ bit(m_b, m_curVal) ^
+                                         (bit(m_c, m_curVal) & bit(m_d, m_curVal));
+
+                        m_curVal = (m_curVal >> 1) | (newBit << (m_nVariables - 1));
+                        
+                        return m_curVal;
                 }
+
 
                 friend class FuncGenerator_0_a_b_cd;
 };

@@ -25,6 +25,14 @@ OBJSFROMCPP = $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(CPPFILES))
 OBJS        = $(OBJSFROMC) $(OBJSFROMCPP)
 DEPFILES    = $(patsubst %.o, %.d, $(OBJS))
 
+
+# dev is all + debug options: -g, -O0, -DDEBUG
+dev: CFLAGS=-O0 -g -Wall -Wextra -Isrc -std=c99 -pedantic $(OPTFLAGS)
+dev: CXXFLAGS=-O0 -g -Wall -Wextra -Isrc  -std=c++11 -pedantic $(OPTFLAGS)
+dev: CPPFLAGS+=-DDEBUG
+dev: $(PROJECT)
+
+
 # Targets
 $(PROJECT): depends buildrepo $(OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) -o $@
@@ -36,11 +44,6 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) $(OPTS) -c $< -o $@
 	
 
-# dev is all + debug options: -g, -O0, -DDEBUG
-dev: CFLAGS = -O0 -g -Wall -Wextra -Isrc -std=c99 -pedantic $(OPTFLAGS)
-dev: CXXLAGS = -O0 -g -Wall -Wextra -Isrc  -std=c++11 -pedantic $(OPTFLAGS)
-dev: CPPFLAGS += -DDEBUG
-dev: $(PROJECT)
 
 test: depends $(OBJS)
 	cd tests && $(MAKE) run
