@@ -56,7 +56,8 @@ int main(int argc, const char *argv[])
 
         maxFunctions = max_functions(4, 6);
 
-        print_functions(maxFunctions, std::cout);
+        /* Print on the fly instead */
+        //print_functions(maxFunctions, std::cout);
 
 #if 0
         print_details(maxFunctions, std::cerr);
@@ -72,9 +73,14 @@ std::vector<Function *> max_functions(uint32_t minNVariables, uint32_t maxNVaria
         std::vector<Function *> maxFunctions;
 
         for (uint32_t nVariables = minNVariables; nVariables <= maxNVariavles; nVariables++) {
+
+                std::cerr << std::endl
+                          << "========= Testing for " << nVariables << " variables =========="
+                          << std::endl;
+
                 try {
-                        std::cerr << std::endl << "******** Checking functions "
-                                  << "x0 + xa + xb + xc.xd for " << nVariables << " variables ********"
+                        std::cerr << std::endl << "*** Checking functions "
+                                  << "x0 + xa + xb + xc.xd for " << nVariables << " variables ***"
                                   << std::endl;
                         FuncGenerator_0_a_b_cd generator_0_a_b_cd(nVariables);
                         std::vector<Function *> maxFuncsForGenerator =
@@ -89,8 +95,8 @@ std::vector<Function *> max_functions(uint32_t minNVariables, uint32_t maxNVaria
 
 
                 try {
-                        std::cerr << std::endl << "******** Checking functions "
-                                  << "x0 + xa + xb.xc + xd.xe for " << nVariables << " variables ********"
+                        std::cerr << std::endl << "*** Checking functions "
+                                  << "x0 + xa + xb.xc + xd.xe for " << nVariables << " variables ***"
                                   << std::endl;
                         FuncGenerator_0_a_bc_de generator_0_a_bc_de(nVariables);
                         std::vector<Function *> maxFuncsForGenerator =
@@ -141,6 +147,7 @@ std::vector<Function *> max_functions_for_generator(FuncGenerator& generator)
                                 std::cerr << std::endl << "Found a max function" << std::endl;
                                 pCurFunc->printDetails(std::cerr);
 #endif
+                                std::cout << pCurFunc->toString() << std::endl;
                         } else {
                                 delete pCurFunc;
                         }
