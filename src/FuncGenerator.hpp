@@ -1,3 +1,6 @@
+#ifndef __FUNCGENERATOR_H__
+#define __FUNCGENERATOR_H__
+
 #include <fstream>
 
 #include "Function.hpp"
@@ -13,7 +16,7 @@
 class NoMoreFunctionsException
 {
         public:
-                NoMoreFunctionsException();
+                NoMoreFunctionsException() {}
 };
 
 
@@ -22,7 +25,7 @@ class NoMoreFunctionsException
 class NotEnoughVariablesException
 {
         public:
-                NotEnoughVariablesException();
+                NotEnoughVariablesException() {}
 };
 
 //XXX pour éviter la merde avec le polymorphisme bancale de C++, ne créons pas d'interface.
@@ -59,20 +62,20 @@ class FuncGenerator
  *      a + b + c.d
  * for a number of variables specified at instanciation time
  */
-class FuncGenerator_a_b_cd
+class FuncGenerator_0_a_b_cd
 {
         public:
                 /* Construct a function generator of form a + b + c.d over nVariables
                  * different variables */
-                FuncGenerator_a_b_cd(uint32_t nVariables);
-                ~FuncGenerator_a_b_cd();
+                FuncGenerator_0_a_b_cd(uint32_t nVariables);
+                ~FuncGenerator_0_a_b_cd();
 
                 /* This functions returns the next Function instance belonging to the form
                  * a + b + c.d for nVariables number of variables.
                  * Throws a NoMoreFunctionsException if all possible functions (without
                  * symetric) have been seen.
                  */
-                Function_a_b_cd *getNextFunction() throw (NoMoreFunctionsException);
+                Function_0_a_b_cd *getNextFunction() throw (NoMoreFunctionsException);
 
                 /* Returns the maximum possible length of a cycle for this kind of function
                  * and this number of variables. This is 2^n - 1 where n is the number of
@@ -86,10 +89,11 @@ class FuncGenerator_a_b_cd
 
 
         private:
-                uint32_t m_nVariables;
-                Function_a_b_cd curFunc;
-                inline void generate_next_function() {
-                        std::cout << "génère une fonction" << std::endl;
-                        
-                }
+                int32_t m_nVariables;
+                Function_0_a_b_cd m_curFunc;
+
+                void generate_next_function();
 };
+
+
+#endif /* end of include guard: __FUNCGENERATOR_H__ */

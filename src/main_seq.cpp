@@ -4,13 +4,21 @@
 
 
 
+template <class FuncGenerator>
+void find_max_functions_for(FuncGenerator& generator, std::ostream& outStream);
+
+void find_max_functions_of_size(uint32_t nVariables, std::ostream& outStream);
+void find_max_functions(uint32_t minNVariables, uint32_t maxNVariavles, std::ostream& outStream);
+
+
+
 int main(int argc, const char *argv[])
 {
         (void)argc;
         (void)argv;
-        /* Do nothing at the moment */
-        std::cout << "Coucou, je ne vais rien faire" << std::endl;
-        
+
+        FuncGenerator_0_a_b_cd gen(4);
+        find_max_functions_for(gen, std::cout);
 
         return 0;
 }
@@ -36,15 +44,21 @@ void find_max_functions_for(FuncGenerator& generator, std::ostream& outStream)
         std::vector<Function *> maxFunctions;
         Function *curFunc;
 
+
         while (moreFuncs) {
                 try {
                         /* Allocated on the heap, from now on we are responsible for it */
                         curFunc = generator.getNextFunction();
+
+                        //XXX for debug only !
+#if 0
                         if (curFunc->getCycleLength() == maxLength) {
                                 maxFunctions.push_back(curFunc);
                         } else {
                                 delete curFunc;
                         }
+#endif
+                        maxFunctions.push_back(curFunc);
                 } catch (NoMoreFunctionsException& e) {
                         moreFuncs = false;
                 } /* Any other exception goes up */
@@ -62,8 +76,8 @@ void find_max_functions_of_size(uint32_t nVariables, std::ostream& outStream)
 {
 
         try {
-                FuncGenerator_a_b_cd generator_a_b_cd(nVariables);
-                find_max_functions_for(generator_a_b_cd, outStream);
+                FuncGenerator_0_a_b_cd generator_0_a_b_cd(nVariables);
+                find_max_functions_for(generator_0_a_b_cd, outStream);
         } catch (NotEnoughVariablesException& e) {
                 std::cout << nVariables << " is not enough variables for for a + b + c.d" << std::endl;
         }
