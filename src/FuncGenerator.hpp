@@ -96,4 +96,41 @@ class FuncGenerator_0_a_b_cd
 };
 
 
+
+
+class FuncGenerator_0_a_bc_de
+{
+        public:
+                /* Construct a function generator of form a + b + c.d over nVariables
+                 * different variables */
+                FuncGenerator_0_a_bc_de(uint32_t nVariables);
+                ~FuncGenerator_0_a_bc_de();
+
+                /* This functions returns the next Function instance belonging to the form
+                 * a + b + c.d for nVariables number of variables.
+                 * Throws a NoMoreFunctionsException if all possible functions (without
+                 * symetric) have been seen.
+                 */
+                Function_0_a_bc_de *getNextFunction() throw (NoMoreFunctionsException);
+
+                /* Returns the maximum possible length of a cycle for this kind of function
+                 * and this number of variables. This is 2^n - 1 where n is the number of
+                 * variables. */
+                inline uint32_t getMaxPossibleLength() const
+                {
+                        return (1 << m_nVariables) - 1;
+                }
+
+
+
+
+        private:
+                int32_t m_nVariables;
+                Function_0_a_bc_de m_curFunc;
+
+                void generate_next_function();
+};
+
+
+
 #endif /* end of include guard: __FUNCGENERATOR_H__ */

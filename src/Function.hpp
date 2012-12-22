@@ -109,7 +109,6 @@ class Function_0_a_b_cd : public Function
 
 
 
-#if 0
 class Function_0_a_bc_de : public Function
 {
         public:
@@ -117,7 +116,7 @@ class Function_0_a_bc_de : public Function
                 Function_0_a_bc_de(Function_0_a_bc_de& other);
                 Function_0_a_bc_de(const Function_0_a_bc_de& other);
                 Function_0_a_bc_de(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e, uint32_t m_nVariables);
-                virtual ~Function_0_a_b_cd();
+                virtual ~Function_0_a_bc_de();
 
                 virtual std::string toString() const;
                 virtual std::string toPrettyString() const;
@@ -133,8 +132,9 @@ class Function_0_a_bc_de : public Function
 
         protected:
                 virtual inline uint32_t nextVal() {
-                        uint32_t newBit = bit(0, m_curVal) ^ bit(m_a, m_curVal) ^ bit(m_b, m_curVal) ^
-                                         (bit(m_c, m_curVal) & bit(m_d, m_curVal));
+                        uint32_t newBit = bit(0, m_curVal) ^ bit(m_a, m_curVal) ^
+                                         (bit(m_b, m_curVal) & bit(m_c, m_curVal)) ^
+                                         (bit(m_d, m_curVal) & bit(m_e, m_curVal));
 
                         m_curVal = (m_curVal >> 1) | (newBit << (m_nVariables - 1));
                         
@@ -142,8 +142,9 @@ class Function_0_a_bc_de : public Function
                 }
 
 
-                friend class FuncGenerator_0_a_b_cd;
+                friend class FuncGenerator_0_a_bc_de;
 };
-#endif
+
+
 
 #endif /* end of include guard: __FUNCTION_H__ */

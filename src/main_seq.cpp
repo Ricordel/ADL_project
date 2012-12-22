@@ -84,8 +84,25 @@ std::vector<Function *> max_functions(uint32_t minNVariables, uint32_t maxNVaria
                                                                 maxFuncsForGenerator.end());
 
                 } catch (NotEnoughVariablesException& e) {
+                        std::cerr << nVariables << " is not enough variables for for a + b.c + d.e" << std::endl;
+                }
+
+
+                try {
+                        std::cerr << std::endl << "******** Checking functions "
+                                  << "x0 + xa + xb.xc + xd.xe for " << nVariables << " variables ********"
+                                  << std::endl;
+                        FuncGenerator_0_a_bc_de generator_0_a_bc_de(nVariables);
+                        std::vector<Function *> maxFuncsForGenerator =
+                                max_functions_for_generator(generator_0_a_bc_de);
+
+                        maxFunctions.insert(maxFunctions.end(), maxFuncsForGenerator.begin(),
+                                                                maxFuncsForGenerator.end());
+
+                } catch (NotEnoughVariablesException& e) {
                         std::cerr << nVariables << " is not enough variables for for a + b + c.d" << std::endl;
                 }
+
 
                 // Place other generators for other kinds of functions here
         }
@@ -154,80 +171,3 @@ void print_details(std::vector<Function *> maxFunctions, std::ostream& outStream
                 outStream << std::endl << std::endl;
         }
 }
-
-
-
-#if 0
-
-
-/* The main logic of the program:
- *      - instantiate function generators for the forms and number
- *        of variables we want to test
- *      - cycle through all functions of a given form
- *      - report our successes
- * This logic is implemented in the following functions.
- */
-
-
-/* Parametric polymorphism over function generator types */
-template <class FuncGenerator>
-void find_max_functions_for(FuncGenerator& generator, std::ostream& outStream)
-{
-        bool moreFuncs = true;
-        uint32_t maxLength = generator.getMaxPossibleLength();
-
-        std::vector<Function *> maxFunctions;
-        Function *pCurFunc;
-
-
-        while (moreFuncs) {
-                try {
-                        /* Allocated on the heap, from now on we are responsible for it */
-                        pCurFunc = generator.getNextFunction();
-
-                        std::cerr << "Checking " << pCurFunc->toPrettyString() << std::endl;
-
-                        uint32_t l = pCurFunc->getCycleLength();
-                        std::cerr << "Length: " << l << std::endl << std::endl;
-
-                        if (l == maxLength) {
-                                maxFunctions.push_back(pCurFunc);
-                        } else {
-                                delete pCurFunc;
-                        }
-
-                } catch (NoMoreFunctionsException& e) {
-                        moreFuncs = false;
-                } /* Any other exception goes up */
-        }
-
-        // Report maximum functions in the log stream
-        for (Function *func : maxFunctions) {
-                outStream << func->toString() << std::endl;
-                delete func;
-        }
-}
-
-
-void find_max_functions_of_size(uint32_t nVariables, std::ostream& outStream)
-{
-
-        try {
-                FuncGenerator_0_a_b_cd generator_0_a_b_cd(nVariables);
-                find_max_functions_for(generator_0_a_b_cd, outStream);
-        } catch (NotEnoughVariablesException& e) {
-                std::cerr << nVariables << " is not enough variables for for a + b + c.d" << std::endl;
-        }
-
-        /* Place here other forms of generators when time has come */
-}
-
-
-void find_max_functions(uint32_t minNVariables, uint32_t maxNVariavles, std::ostream& outStream)
-{
-        for (uint32_t nVariables = minNVariables; nVariables < maxNVariavles; nVariables++) {
-                find_max_functions_of_size(nVariables, outStream);
-        }
-}
-
-#endif
