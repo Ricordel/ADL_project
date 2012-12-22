@@ -18,9 +18,7 @@ Function_0_a_b_cd::Function_0_a_b_cd()
         : Function(0), m_a(0), m_b(0), m_c(0), m_d(0)
 {}
 
-//XXX y a un truc avec les références ici, ou un truc du genre, en
-//XXX rapport avec le passage direct de Function(a, b, c, d) dans
-//XXX lower_or_equal().
+
 Function_0_a_b_cd::Function_0_a_b_cd(Function_0_a_b_cd& other)
         : Function(other.m_nVariables),
           m_a(other.m_a), m_b(other.m_b), m_c(other.m_c), m_d(other.m_d)

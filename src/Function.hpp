@@ -35,23 +35,27 @@ class Function
                 virtual bool isCanonicalForm() const = 0;
 
                 /* Return the length of the NLFSR cycle for this particular function */
-                inline uint32_t getCycleLength() {
+                inline uint32_t getCycleLength()
+                {
                         int length = 1;
-                        m_curVal = m_startVal;
-                        std::cout << m_curVal << " ";
-                        while (this->nextVal() != m_startVal) {
-                                std::cout << m_curVal << " ";
+                        m_curVal = 1;
+                        while (this->nextVal() != 1) { /* back to start value */
                                 length++;
                         }
-                        //XXX
-                        std::cout << std::endl;
 
                         return length;
                 }
 
+                inline void printCycle(std::ostream& outStream)
+                {
+                        m_curVal = 1;
+                        do {
+                                outStream << m_curVal << " ";
+                        } while (this->nextVal() != 1);
+                }
+
         protected:
                 uint32_t m_curVal;
-                uint32_t m_startVal = 1;
                 uint32_t m_nVariables;
                 
                 /* Side effects on the m_curVal member AND returns its value */

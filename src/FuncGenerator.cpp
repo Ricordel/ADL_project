@@ -11,6 +11,7 @@ FuncGenerator_0_a_b_cd::FuncGenerator_0_a_b_cd(uint32_t nVariables)
         m_curFunc.m_b = -1;
         m_curFunc.m_c = -1;
         m_curFunc.m_d = -1;
+        m_curFunc.m_nVariables = nVariables;
 }
 
 FuncGenerator_0_a_b_cd::~FuncGenerator_0_a_b_cd() {}
@@ -43,9 +44,6 @@ void FuncGenerator_0_a_b_cd::generate_next_function()
         /* This will go very far to the right side, so I'll return early instead
          * of using lots of "else" */
 
-        //XXX Utiliser des constructeurs ici plutôt que de modifier sur place
-        //XXX l'objet, c'est dégueu.
-        m_curFunc.m_nVariables = m_nVariables;
 
         /* If it's the first time we come here */
         if (m_curFunc.m_a == -1) {
