@@ -25,10 +25,15 @@ OBJSFROMCPP = $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(CPPFILES))
 OBJS        = $(OBJSFROMC) $(OBJSFROMCPP)
 DEPFILES    = $(patsubst %.o, %.d, $(OBJS))
 
+# Objs common to finder and function printer
+COMMON_OBJS = $(OBJDIR)/Function.o
 
 # Targets
-$(PROJECT): depends buildrepo $(OBJS)
-	$(LD) $(LDFLAGS) $(OBJS) -o $@
+find_functions: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/FuncGenerator.o $(OBJDIR)/find_functions.o
+	$(LD) $(LDFLAGS) $(COMMON_OBJS) $(OBJDIR)/FuncGenerator.o $(OBJDIR)/find_functions.o -o $@
+
+print_function: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/expander.o
+	$(LD) $(LDFLAGS) $(COMMON_OBJS) $(OBJDIR)/expander.o -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(OPTS) -c $< -o $@
@@ -42,7 +47,6 @@ dev: CFLAGS=-O0 -g -Wall -Wextra -Isrc -std=c99 -pedantic $(OPTFLAGS)
 dev: CXXFLAGS=-O0 -g -Wall -Wextra -Isrc  -std=c++11 -pedantic $(OPTFLAGS)
 dev: CPPFLAGS+=-DDEBUG
 dev: $(PROJECT)
-
 
 
 
@@ -64,14 +68,8 @@ cleanall: clean
 tags:
 	ctags -R
 
-# From Zed Shaw's Learn C the hard way, chap 29
-BADFUNCS='[^_.>a-zA-Z0-9](str(n?cpy|n?cat|xfrm|n?dup|str|pbrk|tok|_)|stpn?cpy|a?sn?printf|byte_)'
-check-badfuncs:
-	@echo "Files with potentially dangerous functions :"
-	@egrep $(BADFUNCS) $(CFILES) $(CPPFILES) || true
 
-
-.PHONY: clean check_badfuncs depends buildrepo depends test tags
+.PHONY: clean depends buildrepo depends test tags
 	
 buildrepo:
 	@$(call make-repo)

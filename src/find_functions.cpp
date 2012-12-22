@@ -54,7 +54,7 @@ int main(int argc, const char *argv[])
 
         std::vector<Function *> maxFunctions;
 
-        maxFunctions = max_functions(4, 6);
+        maxFunctions = max_functions(4, 20);
 
         /* Print on the fly instead */
         //print_functions(maxFunctions, std::cout);
