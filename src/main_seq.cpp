@@ -54,12 +54,13 @@ int main(int argc, const char *argv[])
 
         std::vector<Function *> maxFunctions;
 
-        FuncGenerator_0_a_b_cd gen(4);
-        maxFunctions = max_functions_for_generator(gen);
+        maxFunctions = max_functions(4, 6);
 
         print_functions(maxFunctions, std::cout);
 
+#if 0
         print_details(maxFunctions, std::cerr);
+#endif
 
         return 0;
 }
@@ -72,6 +73,9 @@ std::vector<Function *> max_functions(uint32_t minNVariables, uint32_t maxNVaria
 
         for (uint32_t nVariables = minNVariables; nVariables <= maxNVariavles; nVariables++) {
                 try {
+                        std::cerr << std::endl << "******** Checking functions "
+                                  << "x0 + xa + xb + xc.xd for " << nVariables << " variables ********"
+                                  << std::endl;
                         FuncGenerator_0_a_b_cd generator_0_a_b_cd(nVariables);
                         std::vector<Function *> maxFuncsForGenerator =
                                 max_functions_for_generator(generator_0_a_b_cd);
@@ -116,6 +120,10 @@ std::vector<Function *> max_functions_for_generator(FuncGenerator& generator)
 
                         if (l == maxLength) {
                                 maxFunctions.push_back(pCurFunc);
+#ifndef NDEBUG
+                                std::cerr << std::endl << "Found a max function" << std::endl;
+                                pCurFunc->printDetails(std::cerr);
+#endif
                         } else {
                                 delete pCurFunc;
                         }
@@ -138,13 +146,11 @@ void print_functions(std::vector<Function *> maxFunctions, std::ostream& outStre
 }
 
 
-
 void print_details(std::vector<Function *> maxFunctions, std::ostream& outStream)
 {
         outStream << std::endl;
         for (auto pFunc : maxFunctions) {
-                outStream << pFunc->toPrettyString() << std::endl << "\t";
-                pFunc->printCycle(outStream);
+                pFunc->printDetails(outStream);
                 outStream << std::endl << std::endl;
         }
 }

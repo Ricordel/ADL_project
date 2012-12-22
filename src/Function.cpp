@@ -43,7 +43,8 @@ Function_0_a_b_cd::~Function_0_a_b_cd() {}
 std::string Function_0_a_b_cd::toString() const
 {
         std::ostringstream sstr;
-        sstr << 0 << "," << m_a  << "," << m_b << ",(" << m_c << "," << m_d << ")";
+        sstr << m_nVariables << " variables: "
+             << 0 << "," << m_a  << "," << m_b << ",(" << m_c << "," << m_d << ")";
 
         return sstr.str();
 }

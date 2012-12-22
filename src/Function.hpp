@@ -54,6 +54,13 @@ class Function
                         } while (this->nextVal() != 1);
                 }
 
+                inline void printDetails(std::ostream& outStream)
+                {
+                        outStream << toPrettyString() << std::endl << "\t";
+                        printCycle(outStream);
+                        outStream << std::endl;
+                }
+
         protected:
                 uint32_t m_curVal;
                 uint32_t m_nVariables;
@@ -61,7 +68,6 @@ class Function
                 /* Side effects on the m_curVal member AND returns its value */
                 virtual uint32_t nextVal() = 0;
 };
-
 
 
 
@@ -99,5 +105,45 @@ class Function_0_a_b_cd : public Function
                 friend class FuncGenerator_0_a_b_cd;
 };
 
+
+
+
+
+#if 0
+class Function_0_a_bc_de : public Function
+{
+        public:
+                Function_0_a_bc_de();
+                Function_0_a_bc_de(Function_0_a_bc_de& other);
+                Function_0_a_bc_de(const Function_0_a_bc_de& other);
+                Function_0_a_bc_de(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e, uint32_t m_nVariables);
+                virtual ~Function_0_a_b_cd();
+
+                virtual std::string toString() const;
+                virtual std::string toPrettyString() const;
+                virtual bool isCanonicalForm() const;
+
+        private:
+                int32_t m_a;
+                int32_t m_b;
+                int32_t m_c;
+                int32_t m_d;
+                int32_t m_e;
+                bool smaller_or_equal(Function_0_a_bc_de other) const;
+
+        protected:
+                virtual inline uint32_t nextVal() {
+                        uint32_t newBit = bit(0, m_curVal) ^ bit(m_a, m_curVal) ^ bit(m_b, m_curVal) ^
+                                         (bit(m_c, m_curVal) & bit(m_d, m_curVal));
+
+                        m_curVal = (m_curVal >> 1) | (newBit << (m_nVariables - 1));
+                        
+                        return m_curVal;
+                }
+
+
+                friend class FuncGenerator_0_a_b_cd;
+};
+#endif
 
 #endif /* end of include guard: __FUNCTION_H__ */
