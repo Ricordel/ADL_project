@@ -22,6 +22,9 @@ void FuncGenerator_0_a_b_cd::reportMaxFunctions()
         // For the outermost loop, because of reverse functions, no need to go
         // funther than half the number of variables as long as the last variable
         // goes to the end.
+
+
+#pragma omp parallel for
         for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
                 for (int32_t b = a + 1; b <= m_nVariables - 1; b++) {
 
@@ -29,8 +32,10 @@ void FuncGenerator_0_a_b_cd::reportMaxFunctions()
                                 for (int32_t d = c + 1; d <= m_nVariables - 1; d++) {
 
                                         Function_0_a_b_cd f(a, b, c, d, m_nVariables);
+
                                         if (f.isCanonicalForm()
                                          && f.getCycleLength() == this->getMaxPossibleLength()) {
+                                                #pragma omp critical
                                                 std::cout << f.toString() << std::endl;
                                         }
                                 }
@@ -63,6 +68,9 @@ void FuncGenerator_0_a_bc_de::reportMaxFunctions()
         // For the outermost loop, because of reverse functions, no need to go
         // funther than half the number of variables as long as the last variable
         // goes to the end.
+
+
+#pragma omp parallel for
         for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
 
                 for (int32_t b = 1; b <= m_nVariables - 2; b++) {
@@ -75,6 +83,7 @@ void FuncGenerator_0_a_bc_de::reportMaxFunctions()
                                                 
                                                 if (f.isCanonicalForm()
                                                  && f.getCycleLength() == this->getMaxPossibleLength()) {
+                                                        #pragma omp critical
                                                         std::cout << f.toString() << std::endl;
                                                 }
                                         }
