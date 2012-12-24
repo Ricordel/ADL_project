@@ -8,7 +8,7 @@
  * Returns maximum cycle-length functions for different forms and
  * different number of variables.
  */
-std::vector<Function *> max_functions(uint32_t minNVariables, uint32_t maxNVariavles);
+void report_max_functions(uint32_t minNVariables, uint32_t maxNVariavles);
 
 
 /*
@@ -18,7 +18,7 @@ std::vector<Function *> max_functions(uint32_t minNVariables, uint32_t maxNVaria
  * variance in heritage). So I use templates to replace.
  */
 template <class FuncGenerator>
-std::vector<Function *> max_functions_for_generator(FuncGenerator& generator);
+void report_max_functions_for_generator(FuncGenerator& generator);
 
 
 
@@ -36,22 +36,15 @@ int main(int argc, const char *argv[])
         (void)argc;
         (void)argv;
 
-        std::vector<Function *> maxFunctions;
-
-        maxFunctions = max_functions(4, 13);
-
-#if 0
-        print_details(maxFunctions, std::cerr);
-#endif
+        report_max_functions(4, 13);
 
         return 0;
 }
 
 
 
-std::vector<Function *> max_functions(uint32_t minNVariables, uint32_t maxNVariavles)
+void report_max_functions(uint32_t minNVariables, uint32_t maxNVariavles)
 {
-        std::vector<Function *> maxFunctions;
 
         for (uint32_t nVariables = minNVariables; nVariables <= maxNVariavles; nVariables++) {
 
@@ -64,11 +57,7 @@ std::vector<Function *> max_functions(uint32_t minNVariables, uint32_t maxNVaria
                                   << "x0 + xa + xb + xc.xd for " << nVariables << " variables ***"
                                   << std::endl;
                         FuncGenerator_0_a_b_cd generator_0_a_b_cd(nVariables);
-                        std::vector<Function *> maxFuncsForGenerator =
-                                max_functions_for_generator(generator_0_a_b_cd);
-
-                        maxFunctions.insert(maxFunctions.end(), maxFuncsForGenerator.begin(),
-                                                                maxFuncsForGenerator.end());
+                        report_max_functions_for_generator(generator_0_a_b_cd);
 
                 } catch (NotEnoughVariablesException& e) {
                         std::cerr << nVariables << " is not enough variables for for a + b.c + d.e" << std::endl;
@@ -80,11 +69,7 @@ std::vector<Function *> max_functions(uint32_t minNVariables, uint32_t maxNVaria
                                   << "x0 + xa + xb.xc + xd.xe for " << nVariables << " variables ***"
                                   << std::endl;
                         FuncGenerator_0_a_bc_de generator_0_a_bc_de(nVariables);
-                        std::vector<Function *> maxFuncsForGenerator =
-                                max_functions_for_generator(generator_0_a_bc_de);
-
-                        maxFunctions.insert(maxFunctions.end(), maxFuncsForGenerator.begin(),
-                                                                maxFuncsForGenerator.end());
+                        report_max_functions_for_generator(generator_0_a_bc_de);
 
                 } catch (NotEnoughVariablesException& e) {
                         std::cerr << nVariables << " is not enough variables for for a + b + c.d" << std::endl;
@@ -93,8 +78,6 @@ std::vector<Function *> max_functions(uint32_t minNVariables, uint32_t maxNVaria
 
                 // Place other generators for other kinds of functions here
         }
-
-        return maxFunctions;
 }
 
 
@@ -105,12 +88,11 @@ std::vector<Function *> max_functions(uint32_t minNVariables, uint32_t maxNVaria
  * variance in heritage). So I use templates to replace.
  */
 template <class FuncGenerator>
-std::vector<Function *> max_functions_for_generator(FuncGenerator& generator)
+void report_max_functions_for_generator(FuncGenerator& generator)
 {
         bool moreFuncs = true;
         uint32_t maxLength = generator.getMaxPossibleLength();
 
-        std::vector<Function *> maxFunctions;
         Function *pCurFunc;
 
         while (moreFuncs) {
@@ -123,22 +105,19 @@ std::vector<Function *> max_functions_for_generator(FuncGenerator& generator)
                         debug("Length : %u\n", l);
 
                         if (l == maxLength) {
-                                maxFunctions.push_back(pCurFunc);
 #ifndef NDEBUG
                                 std::cerr << std::endl << "Found a max function" << std::endl;
                                 pCurFunc->printDetails(std::cerr);
 #endif
                                 std::cout << pCurFunc->toString() << std::endl;
-                        } else {
-                                delete pCurFunc;
                         }
+
+                        delete pCurFunc;
 
                 } catch (NoMoreFunctionsException& e) {
                         moreFuncs = false;
                 } /* Any other exception goes up */
         }
-
-        return maxFunctions;
 }
 
 
