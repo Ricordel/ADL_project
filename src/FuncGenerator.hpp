@@ -28,32 +28,6 @@ class NotEnoughVariablesException
                 NotEnoughVariablesException() {}
 };
 
-//XXX pour éviter la merde avec le polymorphisme bancale de C++, ne créons pas d'interface.
-//XXX de toutes façons, y a pas grand chose à abstraire dedans. Ça aurait été mieux, mais
-//XXX on fera sans.
-#if 0
-class FuncGenerator
-{
-        public:
-                /* Construct a NLFSR function of the given form (depending on the derived
-                 * class) with nVariables different variables */
-                FuncGenerator(uint32_t nVariables);
-
-                /* This returns the next function of the form given by the concrete type
-                 * and the number of variables. Must return a pointer so that late
-                 * binding on the function type can be made*/
-                virtual Function * getNextFunction() throw NoMoreFunctionsException = 0;
-
-
-        protected:
-                /* Number of variables in the NLFSR */
-                uint32_t m_nVariables;
-
-                /* Next function to return */
-                uint32_t
-};
-#endif
-
 
 
 

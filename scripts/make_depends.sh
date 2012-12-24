@@ -16,7 +16,7 @@ do
     file_dir="$objdir/$file_dir_truncated"
 
     # Now we can generate the buggy dependancies with gcc
-    gcc -MM $f > "$file_dir$name.d"
+    g++ -std=c++0x -MM $f > "$file_dir$name.d"
     # And correct them
     safe_file_dir=$(printf "%s\n" "$file_dir" | sed 's/[\&/]/\\&/g')
     sed -i -e "s/^\(.*:\)/$safe_file_dir\1/g" $file_dir$name.d

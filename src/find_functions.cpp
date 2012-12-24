@@ -21,12 +21,6 @@ template <class FuncGenerator>
 std::vector<Function *> max_functions_for_generator(FuncGenerator& generator);
 
 
-/*
- * This function prints the function in "normal form" (that is not pretty printing)
- * to the given stream
- */
-void print_functions(std::vector<Function *> maxFunctions, std::ostream& outStream);
-
 
 /*
  * This is more for debug. It prints the "pretty print" form of functions along with
@@ -37,16 +31,6 @@ void print_details(std::vector<Function *> maxFunctions, std::ostream& outStream
 
 
 
-#if 0
-template <class FuncGenerator>
-void find_max_functions_for(FuncGenerator& generator, std::ostream& outStream);
-
-void find_max_functions_of_size(uint32_t nVariables, std::ostream& outStream);
-void find_max_functions(uint32_t minNVariables, uint32_t maxNVariavles, std::ostream& outStream);
-#endif
-
-
-
 int main(int argc, const char *argv[])
 {
         (void)argc;
@@ -54,10 +38,7 @@ int main(int argc, const char *argv[])
 
         std::vector<Function *> maxFunctions;
 
-        maxFunctions = max_functions(4, 20);
-
-        /* Print on the fly instead */
-        //print_functions(maxFunctions, std::cout);
+        maxFunctions = max_functions(4, 13);
 
 #if 0
         print_details(maxFunctions, std::cerr);
@@ -161,13 +142,6 @@ std::vector<Function *> max_functions_for_generator(FuncGenerator& generator)
 }
 
 
-
-void print_functions(std::vector<Function *> maxFunctions, std::ostream& outStream)
-{
-        for (auto pFunc : maxFunctions) {
-                outStream << pFunc->toString() << std::endl;
-        }
-}
 
 
 void print_details(std::vector<Function *> maxFunctions, std::ostream& outStream)
