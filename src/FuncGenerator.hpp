@@ -44,29 +44,22 @@ class FuncGenerator_0_a_b_cd
                 FuncGenerator_0_a_b_cd(uint32_t nVariables);
                 ~FuncGenerator_0_a_b_cd();
 
-                /* This functions returns the next Function instance belonging to the form
-                 * a + b + c.d for nVariables number of variables.
-                 * Throws a NoMoreFunctionsException if all possible functions (without
-                 * symetric) have been seen.
-                 */
-                Function_0_a_b_cd *getNextFunction() throw (NoMoreFunctionsException);
 
                 /* Returns the maximum possible length of a cycle for this kind of function
                  * and this number of variables. This is 2^n - 1 where n is the number of
                  * variables. */
                 inline uint32_t getMaxPossibleLength() const
                 {
-                        return (1 << m_nVariables) - 1;
+                        return m_maxPossibleLength;
                 }
 
-
+                /* Generate and report functions of maximum cycle length */
+                void reportMaxFunctions();
 
 
         private:
                 int32_t m_nVariables;
-                Function_0_a_b_cd m_curFunc;
-
-                void generate_next_function();
+                uint32_t m_maxPossibleLength;
 };
 
 
@@ -85,24 +78,23 @@ class FuncGenerator_0_a_bc_de
                  * Throws a NoMoreFunctionsException if all possible functions (without
                  * symetric) have been seen.
                  */
-                Function_0_a_bc_de *getNextFunction() throw (NoMoreFunctionsException);
+                //Function_0_a_bc_de *getNextFunction() throw (NoMoreFunctionsException);
 
                 /* Returns the maximum possible length of a cycle for this kind of function
                  * and this number of variables. This is 2^n - 1 where n is the number of
                  * variables. */
                 inline uint32_t getMaxPossibleLength() const
                 {
-                        return (1 << m_nVariables) - 1;
+                        return m_maxPossibleLength;
                 }
 
-
+                /* Generate and report functions of maximum cycle length */
+                void reportMaxFunctions();
 
 
         private:
                 int32_t m_nVariables;
-                Function_0_a_bc_de m_curFunc;
-
-                void generate_next_function();
+                uint32_t m_maxPossibleLength;
 };
 
 

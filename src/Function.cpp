@@ -1,5 +1,6 @@
 #include <sstream>
 #include <string>
+#include <omp.h>
 
 #include "Function.hpp"
 
@@ -166,10 +167,7 @@ std::string Function_0_a_b_cd::toPrettyString() const
  *              x0 + x3 + x1 + x6.x5
  *        to be equivalent
  *
- *      - reverse functions having the same cycle length (see paper), for instance
- *              x0 + x1 + x3 + x5.x6
- *        and
- *              x0 + x6 + x5 + x3.x1
+ *      - reverse functions having the same cycle length (see paper)
  *
  *      - any combination of the two
  *
@@ -179,38 +177,47 @@ std::string Function_0_a_b_cd::toPrettyString() const
  *      b, a, (c, d) (commutativity)
  *      b, a, (d, c) (commutativity)
  *
- *      d, c, (b, a) (reverse)
- *      d, c, (a, b) (reverse and commutativity)
- *      c, d, (b, a) (reverse and commutativity)
- *      c, d, (a, b) (reverse and commutativity)
+ * By defining
+ *      ar = N-a, br = N-b, cr = N-c, dr = N-d :
+ *
+ *      ar, br, (cr, dr) (reverse)
+ *      ar, br, (dr, cr) (reverse and then commutativity)
+ *      br, ar, (cr, dr) (reverse and then commutativity)
+ *      br, ar, (dr, cr) (reverse and then commutativity)
  *
  */
 inline bool Function_0_a_b_cd::isCanonicalForm() const
 {
-        // NOTE: number of variables is not usefull here, put to 0
-        return (smaller_or_equal(Function_0_a_b_cd(m_a, m_b, m_d, m_c, 0))
-             && smaller_or_equal(Function_0_a_b_cd(m_b, m_a, m_c, m_d, 0))
-             && smaller_or_equal(Function_0_a_b_cd(m_b, m_a, m_d, m_c, 0))
+        int32_t ar = m_nVariables - m_a;
+        int32_t br = m_nVariables - m_b;
+        int32_t cr = m_nVariables - m_c;
+        int32_t dr = m_nVariables - m_d;
 
-             && smaller_or_equal(Function_0_a_b_cd(m_d, m_c, m_b, m_a, 0))
-             && smaller_or_equal(Function_0_a_b_cd(m_d, m_c, m_a, m_b, 0))
-             && smaller_or_equal(Function_0_a_b_cd(m_c, m_d, m_b, m_a, 0))
-             && smaller_or_equal(Function_0_a_b_cd(m_c, m_d, m_a, m_b, 0)));
+        // Micro-optim: most likely duplicates are reverse, put them first to
+        // benefit of boolean short-circuit
+        return (smaller_or_equal(ar, br, cr, dr)
+             && smaller_or_equal(ar, br, dr, cr)
+             && smaller_or_equal(br, ar, cr, dr)
+             && smaller_or_equal(br, ar, dr, cr)
+
+             && smaller_or_equal(m_a, m_b, m_d, m_c)
+             && smaller_or_equal(m_b, m_a, m_c, m_d)
+             && smaller_or_equal(m_b, m_a, m_d, m_c));
 }
 
 
-bool Function_0_a_b_cd::smaller_or_equal(Function_0_a_b_cd other) const
+inline bool Function_0_a_b_cd::smaller_or_equal(int32_t a, int32_t b, int32_t c, int32_t d) const
 {
-        if (m_a < other.m_a)
+        if (m_a < a)
                 return true;
 
-        if (m_a == other.m_a && m_b < other.m_b)
+        if (m_a == a && m_b < b)
                 return true;
 
-        if (m_a == other.m_a && m_b == other.m_b && m_c < other.m_c)
+        if (m_a == a && m_b == b && m_c < c)
                 return true;
 
-        if (m_a == other.m_a && m_b == other.m_b && m_c == other.m_c && m_d <= other.m_d)
+        if (m_a == a && m_b == b && m_c == c && m_d <= d)
                 return true;
 
         return false;
@@ -397,16 +404,19 @@ std::string Function_0_a_bc_de::toPrettyString() const
  * x0 + xa + xd.xe + xc.xb (commutativity of + and then .)
  * x0 + xa + xe.xd + xc.xb (commutativity of + and then .)
  *
- * x0 + xe + xd.xc + xb.xa (reverse function)
+ * By defining
+ *      xar = N-a, xbr = N-b, xcr = N-c, xdr = N-d, xer = N-e :
  *
- * x0 + xe + xc.xd + xb.xa (reverse function and commutativity of .)
- * x0 + xe + xd.xc + xa.xb (reverse function and commutativity of .)
- * x0 + xe + xc.xd + xa.xb (reverse function and commutativity of .)
+ * x0 + xar + xbr.xcr + xdr.xer (reverse)
  *
- * x0 + xe + xb.xa + xd.xc (reverse function and commutativity of . and then +)
- * x0 + xe + xa.xb + xd.xc (reverse function and commutativity of . and then +)
- * x0 + xe + xb.xa + xc.xd (reverse function and commutativity of . and then +)
- * x0 + xe + xa.xb + xc.xd (reverse function and commutativity of . and then +)
+ * x0 + xar + xcr.xbr + xdr.xer (reverse and then commutativity of .)
+ * x0 + xar + xbr.xcr + xer.xdr (reverse and then commutativity of .)
+ * x0 + xar + xcr.xbr + xer.xdr (reverse and then commutativity of .)
+ *
+ * x0 + xar + xdr.xer + xbr.xcr (reverse and then commutativity of +)
+ * x0 + xar + xer.xdr + xbr.xcr (reverse and then commutativity of + and then .)
+ * x0 + xar + xdr.xer + xcr.xbr (reverse and then commutativity of + and then .)
+ * x0 + xar + xer.xdr + xcr.xbr (reverse and then commutativity of + and then .)
  *
  *
  * The same way as for the first form of functions, we consider a function to be
@@ -415,45 +425,52 @@ std::string Function_0_a_bc_de::toPrettyString() const
  */
 inline bool Function_0_a_bc_de::isCanonicalForm() const
 {
-        // NOTE: number of variables is not usefull here, put to 0
-        return (smaller_or_equal(Function_0_a_bc_de(m_a, m_c, m_b, m_d, m_e, 0))
-             && smaller_or_equal(Function_0_a_bc_de(m_a, m_b, m_c, m_e, m_d, 0))
-             && smaller_or_equal(Function_0_a_bc_de(m_a, m_c, m_b, m_e, m_d, 0))
+        int32_t ar = m_nVariables - m_a;
+        int32_t br = m_nVariables - m_b;
+        int32_t cr = m_nVariables - m_c;
+        int32_t dr = m_nVariables - m_d;
+        int32_t er = m_nVariables - m_e;
 
-             && smaller_or_equal(Function_0_a_bc_de(m_a, m_d, m_e, m_b, m_c, 0))
-             && smaller_or_equal(Function_0_a_bc_de(m_a, m_e, m_d, m_b, m_c, 0))
-             && smaller_or_equal(Function_0_a_bc_de(m_a, m_d, m_e, m_c, m_b, 0))
-             && smaller_or_equal(Function_0_a_bc_de(m_a, m_e, m_d, m_c, m_b, 0))
+        // Micro-optim: most likely duplicates are reverse, put them first to
+        // benefit of boolean short-circuit
+        return (smaller_or_equal(ar, br, cr, dr, er)
 
-             && smaller_or_equal(Function_0_a_bc_de(m_e, m_d, m_c, m_b, m_a, 0))
+             && smaller_or_equal(ar, cr, br, dr, er)
+             && smaller_or_equal(ar, br, cr, er, dr)
+             && smaller_or_equal(ar, cr, br, er, dr)
 
-             && smaller_or_equal(Function_0_a_bc_de(m_e, m_c, m_d, m_b, m_a, 0))
-             && smaller_or_equal(Function_0_a_bc_de(m_e, m_d, m_c, m_a, m_b, 0))
-             && smaller_or_equal(Function_0_a_bc_de(m_e, m_c, m_d, m_a, m_b, 0))
+             && smaller_or_equal(ar, dr, er, br, cr)
+             && smaller_or_equal(ar, er, dr, br, cr)
+             && smaller_or_equal(ar, dr, er, cr, br)
+             && smaller_or_equal(ar, er, dr, cr, br)
 
-             && smaller_or_equal(Function_0_a_bc_de(m_e, m_b, m_a, m_d, m_c, 0))
-             && smaller_or_equal(Function_0_a_bc_de(m_e, m_a, m_b, m_d, m_c, 0))
-             && smaller_or_equal(Function_0_a_bc_de(m_e, m_b, m_a, m_c, m_d, 0))
-             && smaller_or_equal(Function_0_a_bc_de(m_e, m_a, m_b, m_c, m_d, 0)));
+             && smaller_or_equal(m_a, m_c, m_b, m_d, m_e)
+             && smaller_or_equal(m_a, m_b, m_c, m_e, m_d)
+             && smaller_or_equal(m_a, m_c, m_b, m_e, m_d)
+
+             && smaller_or_equal(m_a, m_d, m_e, m_b, m_c)
+             && smaller_or_equal(m_a, m_e, m_d, m_b, m_c)
+             && smaller_or_equal(m_a, m_d, m_e, m_c, m_b)
+             && smaller_or_equal(m_a, m_e, m_d, m_c, m_b));
 }
 
 
 
-bool Function_0_a_bc_de::smaller_or_equal(Function_0_a_bc_de other) const
+inline bool Function_0_a_bc_de::smaller_or_equal(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e) const
 {
-        if (m_a < other.m_a)
+        if (m_a < a)
                 return true;
 
-        if (m_a == other.m_a && m_b < other.m_b)
+        if (m_a == a && m_b < b)
                 return true;
 
-        if (m_a == other.m_a && m_b == other.m_b && m_c < other.m_c)
+        if (m_a == a && m_b == b && m_c < c)
                 return true;
 
-        if (m_a == other.m_a && m_b == other.m_b && m_c == other.m_c && m_d < other.m_d)
+        if (m_a == a && m_b == b && m_c == c && m_d < d)
                 return true;
 
-        if (m_a == other.m_a && m_b == other.m_b && m_c == other.m_c && m_d < other.m_d && m_e < other.m_e)
+        if (m_a == a && m_b == b && m_c == c && m_d < d && m_e < e)
                 return true;
 
         return false;

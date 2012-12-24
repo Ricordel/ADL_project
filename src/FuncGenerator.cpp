@@ -1,4 +1,7 @@
+#include <omp.h>
+
 #include "FuncGenerator.hpp"
+
 
 
 /***********************************************************************
@@ -6,91 +9,37 @@
  ***********************************************************************/
 
 FuncGenerator_0_a_b_cd::FuncGenerator_0_a_b_cd(uint32_t nVariables)
-        : m_nVariables(nVariables)
-{
-        m_curFunc.m_a = -1;
-        m_curFunc.m_b = -1;
-        m_curFunc.m_c = -1;
-        m_curFunc.m_d = -1;
-        m_curFunc.m_nVariables = nVariables;
-}
+        : m_nVariables(nVariables), m_maxPossibleLength((1 << nVariables) - 1)
+{}
 
 FuncGenerator_0_a_b_cd::~FuncGenerator_0_a_b_cd() {}
 
 
 
-/*
- * We must be careful for performance and correctness purposes not to try
- * duplicate functions.
- * For this, we ask the function if it is in canonical form. See Function.cpp
- * for full details on canonical forms.
- */
-Function_0_a_b_cd *FuncGenerator_0_a_b_cd::getNextFunction() throw (NoMoreFunctionsException)
-{
-        do {
-                generate_next_function(); /* May throw the NoMoreFunctionsException */
-        } while (!m_curFunc.isCanonicalForm());
 
-        Function_0_a_b_cd *func = new Function_0_a_b_cd(m_curFunc);
-        return func;
+void FuncGenerator_0_a_b_cd::reportMaxFunctions()
+{
+        // For the outermost loop, because of reverse functions, no need to go
+        // funther than half the number of variables as long as the last variable
+        // goes to the end.
+        for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
+                for (int32_t b = a + 1; b <= m_nVariables - 1; b++) {
+
+                        for (int32_t c = 1; c <= m_nVariables - 2; c++) {
+                                for (int32_t d = c + 1; d <= m_nVariables - 1; d++) {
+
+                                        Function_0_a_b_cd f(a, b, c, d, m_nVariables);
+                                        if (f.isCanonicalForm()
+                                         && f.getCycleLength() == this->getMaxPossibleLength()) {
+                                                std::cout << f.toString() << std::endl;
+                                        }
+                                }
+                        }
+                }
+        }
 }
 
 
-
-/*
- * When generating functions, we try to avoid some easy non-canonical forms
- */
-void FuncGenerator_0_a_b_cd::generate_next_function()
-{
-        /* This will go very far to the right side, so I'll return early instead
-         * of using lots of "else" */
-
-
-        /* If it's the first time we come here */
-        if (m_curFunc.m_a == -1) {
-                m_curFunc.m_a = 1;
-                m_curFunc.m_b = 2;
-                m_curFunc.m_c = 1;
-                m_curFunc.m_d = 2;
-                return;
-        }
-
-
-        /* Try incrementing D */
-        if (m_curFunc.m_d < m_nVariables - 1) {
-                m_curFunc.m_d++;
-                return;
-        }
-
-        /* Try to increment C and hence reset D. We must leave some room
-         * to D, so start at nVariables - 2 */
-        if (m_curFunc.m_c < m_nVariables - 2) {
-                m_curFunc.m_c++;
-                m_curFunc.m_d = m_curFunc.m_c + 1;
-                return;
-        }
-
-        /* Try to increment B and reset C and D */
-        if (m_curFunc.m_b < m_nVariables - 1) {
-                m_curFunc.m_b++;
-                m_curFunc.m_c = 1;
-                m_curFunc.m_d = 2;
-                return;
-        }
-
-        /* Try to increment A, and reset the rest. As for C, we must
-         * leave room for B, so -2 */
-        if (m_curFunc.m_a < m_nVariables - 2) {
-                m_curFunc.m_a++;
-                m_curFunc.m_b = m_curFunc.m_a + 1;
-                m_curFunc.m_c = 1;
-                m_curFunc.m_d = 2;
-                return;
-        }
-
-        /* If we gen here, it means we have exhausted all functions */
-        throw NoMoreFunctionsException();
-}
 
 
 
@@ -101,102 +50,36 @@ void FuncGenerator_0_a_b_cd::generate_next_function()
  ***********************************************************************/
 
 FuncGenerator_0_a_bc_de::FuncGenerator_0_a_bc_de(uint32_t nVariables)
-        : m_nVariables(nVariables)
-{
-        m_curFunc.m_a = -1;
-        m_curFunc.m_b = -1;
-        m_curFunc.m_c = -1;
-        m_curFunc.m_d = -1;
-        m_curFunc.m_e = -1;
-        m_curFunc.m_nVariables = nVariables;
-}
+        : m_nVariables(nVariables), m_maxPossibleLength((1 << m_nVariables) - 1)
+{}
 
 FuncGenerator_0_a_bc_de::~FuncGenerator_0_a_bc_de() {}
 
 
 
-/*
- * We must be careful for performance and correctness purposes not to try
- * duplicate functions.
- * For this, we ask the function if it is in canonical form. See Function.cpp
- * for full details on canonical forms.
- */
-Function_0_a_bc_de *FuncGenerator_0_a_bc_de::getNextFunction() throw (NoMoreFunctionsException)
+
+void FuncGenerator_0_a_bc_de::reportMaxFunctions()
 {
-        do {
-                generate_next_function(); /* May throw the NoMoreFunctionsException */
-        } while (!m_curFunc.isCanonicalForm());
+        // For the outermost loop, because of reverse functions, no need to go
+        // funther than half the number of variables as long as the last variable
+        // goes to the end.
+        for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
 
-        Function_0_a_bc_de *func = new Function_0_a_bc_de(m_curFunc);
-        return func;
-}
+                for (int32_t b = 1; b <= m_nVariables - 2; b++) {
+                        for (int32_t c = b + 1; c <= m_nVariables - 1; c++) {
 
+                                for (int32_t d = 1; d <= m_nVariables - 2; d++) {
+                                        for (int32_t e = d + 1; e <= m_nVariables - 1; e++) {
 
-
-/*
- * When generating functions, we try to avoid some easy non-canonical forms,
- * for instance some commutativity repetitions can be removed by ensuring
- * that c > b and d > e at any time.
- */
-void FuncGenerator_0_a_bc_de::generate_next_function()
-{
-        /* This will go very far to the right side, so I'll return early instead
-         * of using lots of "else" */
-
-
-        /* If it's the first time we come here */
-        if (m_curFunc.m_a == -1) {
-                m_curFunc.m_a = 1;
-
-                m_curFunc.m_b = 1;
-                m_curFunc.m_c = 2;
-
-                m_curFunc.m_d = 1;
-                m_curFunc.m_e = 2;
-                return;
+                                                Function_0_a_bc_de f(a, b, c, d, e, m_nVariables);
+                                                
+                                                if (f.isCanonicalForm()
+                                                 && f.getCycleLength() == this->getMaxPossibleLength()) {
+                                                        std::cout << f.toString() << std::endl;
+                                                }
+                                        }
+                                }
+                        }
+                }
         }
-
-
-        /* Try incrementing E */
-        if (m_curFunc.m_e < m_nVariables - 1) {
-                m_curFunc.m_e++;
-                return;
-        }
-
-        /* Try to increment D, then reset E */
-        if (m_curFunc.m_d < m_nVariables - 2) {
-                m_curFunc.m_d++;
-                m_curFunc.m_e = m_curFunc.m_d + 1;
-                return;
-        }
-
-        /* Try to increment C and reset D and E */
-        if (m_curFunc.m_c < m_nVariables - 1) {
-                m_curFunc.m_c++;
-                m_curFunc.m_d = 1;
-                m_curFunc.m_e = 2;
-                return;
-        }
-
-        /* Try to increment B, and reset C, D, and E */
-        if (m_curFunc.m_b < m_nVariables - 2) {
-                m_curFunc.m_b++;
-                m_curFunc.m_c = m_curFunc.m_b + 1;
-                m_curFunc.m_d = 1;
-                m_curFunc.m_e = 2;
-                return;
-        }
-
-        /* Try to increment A, and reset the rest */
-        if (m_curFunc.m_a < m_nVariables - 1) {
-                m_curFunc.m_a++;
-                m_curFunc.m_b = 1;
-                m_curFunc.m_c = 2;
-                m_curFunc.m_d = 1;
-                m_curFunc.m_e = 2;
-                return;
-        }
-
-        /* If we gen here, it means we have exhausted all functions */
-        throw NoMoreFunctionsException();
 }

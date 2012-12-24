@@ -33,7 +33,7 @@ class Function
                 /* Tell if the function is in canonical form, that is if there is
                  * not a "smaller" function that is equivalent thanks to commutativity
                  * or "reverse equivalence" */
-                virtual bool isCanonicalForm() const = 0;
+                virtual inline bool isCanonicalForm() const = 0;
 
                 /* Return the length of the NLFSR cycle for this particular function */
                 inline uint32_t getCycleLength()
@@ -91,7 +91,7 @@ class Function_0_a_b_cd : public Function
                 int32_t m_b;
                 int32_t m_c;
                 int32_t m_d;
-                bool smaller_or_equal(Function_0_a_b_cd other) const;
+                bool smaller_or_equal(int32_t a, int32_t b, int32_t c, int32_t d) const;
 
         protected:
                 virtual inline uint32_t nextVal() {
@@ -131,7 +131,7 @@ class Function_0_a_bc_de : public Function
                 int32_t m_c;
                 int32_t m_d;
                 int32_t m_e;
-                bool smaller_or_equal(Function_0_a_bc_de other) const;
+                bool smaller_or_equal(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e) const;
 
         protected:
                 virtual inline uint32_t nextVal() {

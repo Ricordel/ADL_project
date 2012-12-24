@@ -1,12 +1,10 @@
 # Compiler options
-CC = gcc-4.7
 CXX = g++-4.7
-CFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG -std=c99 -pedantic $(OPTFLAGS)
-CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG  -std=c++11 -pedantic $(OPTFLAGS)
+CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG  -std=c++11 -pedantic -fopenmp -flto $(OPTFLAGS)
 
 # Superset
 LD = g++
-LDFLAGS = $(OPTLIBS)
+LDFLAGS = -lgomp -flto
 
 # Project name
 
@@ -36,15 +34,11 @@ find_functions: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/FuncGenerator.o $(OBJ
 print_function: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/print_function.o
 	$(LD) $(LDFLAGS) $(COMMON_OBJS) $(OBJDIR)/print_function.o -o $@
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
-	$(CC) $(CFLAGS) $(OPTS) -c $< -o $@
-
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) $(OPTS) -c $< -o $@
 	
 
 # dev is all + debug options: -g, -O0, -DDEBUG
-dev: CFLAGS = -c -O0 -g -Wall -Wextra -Isrc -std=c99 -pedantic $(OPTFLAGS)
 #XXX I get weird errors of undefined operator= in basic_string when compiling in O0
 dev: CXXFLAGS = -c -O1 -g -Wall -Wextra -Isrc  -std=c++11 -pedantic $(OPTFLAGS)
 dev: CPPFLAGS += -DDEBUG
