@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <stdexcept>
 
 
 /* 
@@ -78,6 +79,7 @@ class Function_0_a_b_cd : public Function
                 Function_0_a_b_cd(Function_0_a_b_cd& other);
                 Function_0_a_b_cd(const Function_0_a_b_cd& other);
                 Function_0_a_b_cd(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t m_nVariables);
+                Function_0_a_b_cd(const std::string& strRepr, uint32_t nVariables) throw (std::runtime_error);
                 virtual ~Function_0_a_b_cd();
 
                 virtual std::string toString() const;
@@ -116,6 +118,7 @@ class Function_0_a_bc_de : public Function
                 Function_0_a_bc_de(Function_0_a_bc_de& other);
                 Function_0_a_bc_de(const Function_0_a_bc_de& other);
                 Function_0_a_bc_de(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e, uint32_t m_nVariables);
+                Function_0_a_bc_de(const std::string& strRepr, uint32_t nVariables) throw (std::runtime_error);
                 virtual ~Function_0_a_bc_de();
 
                 virtual std::string toString() const;

@@ -1,6 +1,6 @@
 # Compiler options
-#CC = gcc
-#CXX = g++
+CC = gcc-4.7
+CXX = g++-4.7
 CFLAGS = -c -O2 -Wall -Wextra -Isrc -DNDEBUG -std=c99 -pedantic $(OPTFLAGS)
 CXXFLAGS = -c -O2 -Wall -Wextra -Isrc -DNDEBUG  -std=c++11 -pedantic $(OPTFLAGS)
 
@@ -9,7 +9,6 @@ LD = g++
 LDFLAGS = $(OPTLIBS)
 
 # Project name
-PROJECT = main
 
 # Directories
 OBJDIR = bin
@@ -28,12 +27,14 @@ DEPFILES    = $(patsubst %.o, %.d, $(OBJS))
 # Objs common to finder and function printer
 COMMON_OBJS = $(OBJDIR)/Function.o
 
+all: find_functions print_function
+
 # Targets
 find_functions: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/FuncGenerator.o $(OBJDIR)/find_functions.o
 	$(LD) $(LDFLAGS) $(COMMON_OBJS) $(OBJDIR)/FuncGenerator.o $(OBJDIR)/find_functions.o -o $@
 
-print_function: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/expander.o
-	$(LD) $(LDFLAGS) $(COMMON_OBJS) $(OBJDIR)/expander.o -o $@
+print_function: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/print_function.o
+	$(LD) $(LDFLAGS) $(COMMON_OBJS) $(OBJDIR)/print_function.o -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(OPTS) -c $< -o $@
@@ -43,10 +44,11 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	
 
 # dev is all + debug options: -g, -O0, -DDEBUG
-dev: CFLAGS=-O0 -g -Wall -Wextra -Isrc -std=c99 -pedantic $(OPTFLAGS)
-dev: CXXFLAGS=-O0 -g -Wall -Wextra -Isrc  -std=c++11 -pedantic $(OPTFLAGS)
-dev: CPPFLAGS+=-DDEBUG
-dev: $(PROJECT)
+dev: CFLAGS = -c -O0 -g -Wall -Wextra -Isrc -std=c99 -pedantic $(OPTFLAGS)
+#XXX I get weird errors of undefined operator= in basic_string when compiling in O0
+dev: CXXFLAGS = -c -O1 -g -Wall -Wextra -Isrc  -std=c++11 -pedantic $(OPTFLAGS)
+dev: CPPFLAGS += -DDEBUG
+dev: all
 
 
 
@@ -59,7 +61,7 @@ depends: buildrepo
 
 
 clean:
-	rm $(PROJECT) $(OBJDIR) -Rf
+	rm -f find_functions print_function $(OBJDIR) -Rf
 	cd tests && $(MAKE) clean
 
 cleanall: clean
