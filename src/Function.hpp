@@ -78,7 +78,7 @@ class Function_0_a_b_cd : public Function
                 Function_0_a_b_cd();
                 Function_0_a_b_cd(Function_0_a_b_cd& other);
                 Function_0_a_b_cd(const Function_0_a_b_cd& other);
-                Function_0_a_b_cd(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t m_nVariables);
+                Function_0_a_b_cd(int32_t a, int32_t b, int32_t c, int32_t d, uint32_t m_nVariables);
                 Function_0_a_b_cd(const std::string& strRepr, uint32_t nVariables) throw (std::runtime_error);
                 virtual ~Function_0_a_b_cd();
 
@@ -117,7 +117,7 @@ class Function_0_a_bc_de : public Function
                 Function_0_a_bc_de();
                 Function_0_a_bc_de(Function_0_a_bc_de& other);
                 Function_0_a_bc_de(const Function_0_a_bc_de& other);
-                Function_0_a_bc_de(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e, uint32_t m_nVariables);
+                Function_0_a_bc_de(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, uint32_t m_nVariables);
                 Function_0_a_bc_de(const std::string& strRepr, uint32_t nVariables) throw (std::runtime_error);
                 virtual ~Function_0_a_bc_de();
 
@@ -133,6 +133,7 @@ class Function_0_a_bc_de : public Function
                 int32_t m_e;
                 bool smaller_or_equal(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e) const;
 
+                //XXX did I break this ? Try some cycles by hand, it's weird here...
         protected:
                 virtual inline uint32_t nextVal() {
                         uint32_t newBit = bit(0, m_curVal) ^ bit(m_a, m_curVal) ^
@@ -149,5 +150,42 @@ class Function_0_a_bc_de : public Function
 };
 
 
+class Function_0_a_b_c_d_ef : public Function
+{
+        public:
+                Function_0_a_b_c_d_ef();
+                Function_0_a_b_c_d_ef(int32_t a, int32_t b, int32_t c, int32_t d,
+                                      int32_t e, int32_t f, uint32_t m_nVariables);
+                //XXX see later for this one
+                //Function_0_a_b_c_d_ef(const std::string& strRepr, uint32_t nVariables) throw (std::runtime_error);
+                virtual ~Function_0_a_b_c_d_ef();
+
+                virtual std::string toString() const;
+                virtual std::string toPrettyString() const;
+                virtual bool isCanonicalForm() const;
+
+        private:
+                int32_t m_a;
+                int32_t m_b;
+                int32_t m_c;
+                int32_t m_d;
+                int32_t m_e;
+                int32_t m_f;
+                bool smaller_or_equal(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f) const;
+
+        protected:
+                virtual inline uint32_t nextVal() {
+                        uint32_t newBit = bit(0, m_curVal) ^ bit(m_a, m_curVal) ^ bit(m_b, m_curVal) ^
+                                          bit(m_c, m_curVal) ^ bit(m_d, m_curVal) ^
+                                          (bit(m_e, m_curVal) & bit(m_f, m_curVal));
+
+                        m_curVal = (m_curVal >> 1) | (newBit << (m_nVariables - 1));
+                        
+                        return m_curVal;
+                }
+
+
+                friend class FuncGenerator_0_a_b_c_d_ef;
+};
 
 #endif /* end of include guard: __FUNCTION_H__ */

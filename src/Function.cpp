@@ -34,7 +34,7 @@ Function_0_a_b_cd::Function_0_a_b_cd(const Function_0_a_b_cd& other)
 {}
 
 
-Function_0_a_b_cd::Function_0_a_b_cd(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t nVariables)
+Function_0_a_b_cd::Function_0_a_b_cd(int32_t a, int32_t b, int32_t c, int32_t d, uint32_t nVariables)
         : Function(nVariables), m_a(a), m_b(b), m_c(c), m_d(d)
 {}
 
@@ -169,22 +169,28 @@ std::string Function_0_a_b_cd::toPrettyString() const
  *
  *      - reverse functions having the same cycle length (see paper)
  *
- *      - any combination of the two
+ * Base function:
+ *      x0 + xa + xb + xc.xd
  *
- * A function a, b, (c, d) is considered ad being in canonical form if it's the
- * smallest of the following functions:
- *      a, b, (d, c) (commutativity)
- *      b, a, (c, d) (commutativity)
- *      b, a, (d, c) (commutativity)
+ * Reverse function:
+ *      x0 + xar + xbr + xcr.xdr
+ * where we define
+ *      xar = N - xa, xbr = N - xb, xcr = N - xc, xdr = N - xd
  *
- * By defining
- *      ar = N-a, br = N-b, cr = N-c, dr = N-d :
+ * We know by construction that:
+ *      xa < xb
+ *      xc < xd
  *
- *      ar, br, (cr, dr) (reverse)
- *      ar, br, (dr, cr) (reverse and then commutativity)
- *      br, ar, (cr, dr) (reverse and then commutativity)
- *      br, ar, (dr, cr) (reverse and then commutativity)
+ * Hence we can deduce that:
+ *      xbr < xar
+ *      xdr < xcr
+ *      
+ * So the "minimal" version of the reverse function is
+ *      x0 + xbr + xar + xdr.xcr
  *
+ * This is the only one we need to test against, the other ones being
+ * "greater"
+ *      
  */
 inline bool Function_0_a_b_cd::isCanonicalForm() const
 {
@@ -195,14 +201,7 @@ inline bool Function_0_a_b_cd::isCanonicalForm() const
 
         // Micro-optim: most likely duplicates are reverse, put them first to
         // benefit of boolean short-circuit
-        return (smaller_or_equal(ar, br, cr, dr)
-             && smaller_or_equal(ar, br, dr, cr)
-             && smaller_or_equal(br, ar, cr, dr)
-             && smaller_or_equal(br, ar, dr, cr)
-
-             && smaller_or_equal(m_a, m_b, m_d, m_c)
-             && smaller_or_equal(m_b, m_a, m_c, m_d)
-             && smaller_or_equal(m_b, m_a, m_d, m_c));
+        return smaller_or_equal(br, ar, dr, cr);
 }
 
 
@@ -249,8 +248,8 @@ Function_0_a_bc_de::Function_0_a_bc_de(const Function_0_a_bc_de& other)
 {}
 
 
-Function_0_a_bc_de::Function_0_a_bc_de(uint32_t a, uint32_t b, uint32_t c,
-                                       uint32_t d, uint32_t e, uint32_t nVariables)
+Function_0_a_bc_de::Function_0_a_bc_de(int32_t a, int32_t b, int32_t c,
+                                       int32_t d, int32_t e, uint32_t nVariables)
         : Function(nVariables), m_a(a), m_b(b), m_c(c), m_d(d), m_e(e)
 {}
 
@@ -390,38 +389,32 @@ std::string Function_0_a_bc_de::toPrettyString() const
 
 /*
  * As for the first case, duplication comes from reverse functions
- * and commuttivity of . and +. For this form, the duplications are
- * even more numerous :
+ * and commuttivity of . and +. As for the first case too, we know that
+ * the function we generate is already in lexicographical order, which
+ * allows us to skip lots of tests.
  *
- * x0 + xa + xb.xc + xd.xe
+ * Base function:
+ *      x0 + xa + xb.xc + xd.xe
  *
- * x0 + xa + xc.xb + xd.xe (commutativity of .)
- * x0 + xa + xb.xc + xe.xd (commutativity of .)
- * x0 + xa + xc.xb + xe.xd (commutativity of .)
+ * Reverse function:
+ *      x0 + xar + xbr.xcr + xdr.xer
  *
- * x0 + xa + xd.xe + xb.xc (commutativity of +)
- * x0 + xa + xe.xd + xb.xc (commutativity of + and then .)
- * x0 + xa + xd.xe + xc.xb (commutativity of + and then .)
- * x0 + xa + xe.xd + xc.xb (commutativity of + and then .)
+ * We know by construction that (see generation code):
+ *      xb < xc
+ *      xd < xe
+ *      xb <= xd
  *
- * By defining
+ * So we can deduce:
+ *      xcr < xbr
+ *      xer < xdr
+ *      xdr <= xbr
+ *
+ * So we can simply test the following variant:
+ *      x0 + xar + xer.xdr + xcr.xbr
+ *
+ * where we define:
  *      xar = N-a, xbr = N-b, xcr = N-c, xdr = N-d, xer = N-e :
  *
- * x0 + xar + xbr.xcr + xdr.xer (reverse)
- *
- * x0 + xar + xcr.xbr + xdr.xer (reverse and then commutativity of .)
- * x0 + xar + xbr.xcr + xer.xdr (reverse and then commutativity of .)
- * x0 + xar + xcr.xbr + xer.xdr (reverse and then commutativity of .)
- *
- * x0 + xar + xdr.xer + xbr.xcr (reverse and then commutativity of +)
- * x0 + xar + xer.xdr + xbr.xcr (reverse and then commutativity of + and then .)
- * x0 + xar + xdr.xer + xcr.xbr (reverse and then commutativity of + and then .)
- * x0 + xar + xer.xdr + xcr.xbr (reverse and then commutativity of + and then .)
- *
- *
- * The same way as for the first form of functions, we consider a function to be
- * in canonical form if it's the smallest (in lexicographical order) of all
- * the variants enumerated above.
  */
 inline bool Function_0_a_bc_de::isCanonicalForm() const
 {
@@ -433,25 +426,7 @@ inline bool Function_0_a_bc_de::isCanonicalForm() const
 
         // Micro-optim: most likely duplicates are reverse, put them first to
         // benefit of boolean short-circuit
-        return (smaller_or_equal(ar, br, cr, dr, er)
-
-             && smaller_or_equal(ar, cr, br, dr, er)
-             && smaller_or_equal(ar, br, cr, er, dr)
-             && smaller_or_equal(ar, cr, br, er, dr)
-
-             && smaller_or_equal(ar, dr, er, br, cr)
-             && smaller_or_equal(ar, er, dr, br, cr)
-             && smaller_or_equal(ar, dr, er, cr, br)
-             && smaller_or_equal(ar, er, dr, cr, br)
-
-             && smaller_or_equal(m_a, m_c, m_b, m_d, m_e)
-             && smaller_or_equal(m_a, m_b, m_c, m_e, m_d)
-             && smaller_or_equal(m_a, m_c, m_b, m_e, m_d)
-
-             && smaller_or_equal(m_a, m_d, m_e, m_b, m_c)
-             && smaller_or_equal(m_a, m_e, m_d, m_b, m_c)
-             && smaller_or_equal(m_a, m_d, m_e, m_c, m_b)
-             && smaller_or_equal(m_a, m_e, m_d, m_c, m_b));
+        return smaller_or_equal(ar, er, dr, cr, br);
 }
 
 
@@ -470,7 +445,124 @@ inline bool Function_0_a_bc_de::smaller_or_equal(int32_t a, int32_t b, int32_t c
         if (m_a == a && m_b == b && m_c == c && m_d < d)
                 return true;
 
+        if (m_a == a && m_b == b && m_c == c && m_d == d && m_e <= e)
+                return true;
+
+        return false;
+}
+
+
+
+
+
+
+
+/***********************************************************************
+ **************** For x0 + xa + xb + xc + xd + xe.xf *******************
+ ***********************************************************************/
+
+
+Function_0_a_b_c_d_ef::Function_0_a_b_c_d_ef()
+        : Function(0), m_a(0), m_b(0), m_c(0), m_d(0), m_e(0), m_f(0)
+{}
+
+
+Function_0_a_b_c_d_ef::Function_0_a_b_c_d_ef(int32_t a, int32_t b, int32_t c, int32_t d,
+                                             int32_t e, int32_t f, uint32_t nVariables)
+        : Function(nVariables), m_a(a), m_b(b), m_c(c), m_d(d), m_e(e), m_f(f)
+{}
+
+
+Function_0_a_b_c_d_ef::~Function_0_a_b_c_d_ef() {}
+
+
+
+
+std::string Function_0_a_b_c_d_ef::toString() const
+{
+        std::ostringstream sstr;
+        sstr << m_nVariables << " variables: "
+             << 0 << "," << m_a  << "," << m_b << "," << m_c << "," << m_d << ",(" << m_e << "," << m_f << ")";
+
+        return sstr.str();
+}
+
+
+std::string Function_0_a_b_c_d_ef::toPrettyString() const
+{
+        std::stringstream sstr;
+        sstr << "x_" << 0 << " + " << "x_" << m_a  << " + "
+             << "x_" << m_b << "." << "x_" <<  m_c << " + " << "x_" << m_d << " + "
+             << "(x_" << m_e << "." << "x_" << m_f << ")";
+
+        return sstr.str();
+}
+
+
+
+/*
+ * As for the first case, duplication comes from reverse functions
+ * and commuttivity of . and +.
+ * Considering the way functions are generated, we do not have to check
+ * for cases with xa > xb or xb > xc or xc > xd, of xe > xf.
+ * So non-canonicity due to commutativity is out of reach of our generation,
+ * let's gain some time and code by not checking them.
+ *
+ * It's actually a bit hard to see how variables are sorted in the reverse
+ * function anyway, so we'll test several variations of the reverse.
+ *
+ * Base function:
+ *      x0 + xa + xb + xc + xd + xe.xf
+ *
+ * with xar = N - xa, ... :
+ *
+ * reverse:
+ *      x0 + xar + xbr + xce + xdr + xer.xfr
+ *
+ * As we know that the base function has the following:
+ *      xa < xb < xc < xd
+ *      xe < xf
+ * we can deduce that the lexicographically minimal version of
+ * this reverse function is:
+ *
+ * x0 + xdr + xcr + xbr + xar + xfr.xer
+ *
+ * Hence, this is the only check we have to perform.
+ *
+ */
+inline bool Function_0_a_b_c_d_ef::isCanonicalForm() const
+{
+        int32_t ar = m_nVariables - m_a;
+        int32_t br = m_nVariables - m_b;
+        int32_t cr = m_nVariables - m_c;
+        int32_t dr = m_nVariables - m_d;
+        int32_t er = m_nVariables - m_e;
+        int32_t fr = m_nVariables - m_f;
+
+        return smaller_or_equal(dr, cr, br, ar, fr, er);
+}
+
+
+
+inline bool Function_0_a_b_c_d_ef::smaller_or_equal(
+                int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f) const
+{
+        if (m_a < a)
+                return true;
+
+        if (m_a == a && m_b < b)
+                return true;
+
+        if (m_a == a && m_b == b && m_c < c)
+                return true;
+
+        if (m_a == a && m_b == b && m_c == c && m_d < d)
+                return true;
+
         if (m_a == a && m_b == b && m_c == c && m_d < d && m_e < e)
+                return true;
+
+        if (m_a == a && m_b == b && m_c == c && m_d == d && m_e == e && m_f <= f)
                 return true;
 
         return false;
