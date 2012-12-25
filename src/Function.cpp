@@ -199,24 +199,22 @@ inline bool Function_0_a_b_cd::isCanonicalForm() const
         int32_t cr = m_nVariables - m_c;
         int32_t dr = m_nVariables - m_d;
 
-        // Micro-optim: most likely duplicates are reverse, put them first to
-        // benefit of boolean short-circuit
-        return smaller_or_equal(br, ar, dr, cr);
+        return smaller_or_equal(Function_0_a_b_cd(br, ar, dr, cr, m_nVariables));
 }
 
 
-inline bool Function_0_a_b_cd::smaller_or_equal(int32_t a, int32_t b, int32_t c, int32_t d) const
+inline bool Function_0_a_b_cd::smaller_or_equal(Function_0_a_b_cd other) const
 {
-        if (m_a < a)
+        if (m_a < other.m_a)
                 return true;
 
-        if (m_a == a && m_b < b)
+        if (m_a == other.m_a && m_b < other.m_b)
                 return true;
 
-        if (m_a == a && m_b == b && m_c < c)
+        if (m_a == other.m_a && m_b == other.m_b && m_c < other.m_c)
                 return true;
 
-        if (m_a == a && m_b == b && m_c == c && m_d <= d)
+        if (m_a == other.m_a && m_b == other.m_b && m_c == other.m_c && m_d <= other.m_d)
                 return true;
 
         return false;
@@ -388,17 +386,6 @@ std::string Function_0_a_bc_de::toPrettyString() const
 
 
 /*
- * As for the first case, duplication comes from reverse functions
- * and commuttivity of . and +. As for the first case too, we know that
- * the function we generate is already in lexicographical order, which
- * allows us to skip lots of tests.
- *
- * Base function:
- *      x0 + xa + xb.xc + xd.xe
- *
- * Reverse function:
- *      x0 + xar + xbr.xcr + xdr.xer
- *
  * We know by construction that (see generation code):
  *      xb < xc
  *      xd < xe
@@ -409,12 +396,21 @@ std::string Function_0_a_bc_de::toPrettyString() const
  *      xer < xdr
  *      xdr <= xbr
  *
- * So we can simply test the following variant:
+ * So the smallest reverse function is either
  *      x0 + xar + xer.xdr + xcr.xbr
+ * or
+ *      x0 + xar + xcr.xbr + xer.xdr
+ *
+ * We also need to test against
+ *      x0 + xa + xd.xe + xb.xc
+ * which is not taken care of in the generation process
  *
  * where we define:
  *      xar = N-a, xbr = N-b, xcr = N-c, xdr = N-d, xer = N-e :
  *
+ * Last thing, we don't want functions of the form
+ *      a + b.c + b.c
+ * which are "not really" of the a_bc_de form
  */
 inline bool Function_0_a_bc_de::isCanonicalForm() const
 {
@@ -424,28 +420,32 @@ inline bool Function_0_a_bc_de::isCanonicalForm() const
         int32_t dr = m_nVariables - m_d;
         int32_t er = m_nVariables - m_e;
 
-        // Micro-optim: most likely duplicates are reverse, put them first to
-        // benefit of boolean short-circuit
-        return smaller_or_equal(ar, er, dr, cr, br);
+        if (m_b == m_d && m_c == m_e) {
+                return false;
+        }
+
+        return (smaller_or_equal(Function_0_a_bc_de(ar, er, dr, cr, br, m_nVariables))
+             && smaller_or_equal(Function_0_a_bc_de(ar, cr, br, er, dr, m_nVariables))
+             && smaller_or_equal(Function_0_a_bc_de(m_a, m_d, m_e, m_b, m_c, m_nVariables)));
 }
 
 
 
-inline bool Function_0_a_bc_de::smaller_or_equal(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e) const
+inline bool Function_0_a_bc_de::smaller_or_equal(Function_0_a_bc_de other) const
 {
-        if (m_a < a)
+        if (m_a < other.m_a)
                 return true;
 
-        if (m_a == a && m_b < b)
+        if (m_a == other.m_a && m_b < other.m_b)
                 return true;
 
-        if (m_a == a && m_b == b && m_c < c)
+        if (m_a == other.m_a && m_b == other.m_b && m_c < other.m_c)
                 return true;
 
-        if (m_a == a && m_b == b && m_c == c && m_d < d)
+        if (m_a == other.m_a && m_b == other.m_b && m_c == other.m_c && m_d < other.m_d)
                 return true;
 
-        if (m_a == a && m_b == b && m_c == c && m_d == d && m_e <= e)
+        if (m_a == other.m_a && m_b == other.m_b && m_c == other.m_c && m_d == other.m_d && m_e <= other.m_e)
                 return true;
 
         return false;
@@ -492,7 +492,7 @@ std::string Function_0_a_b_c_d_ef::toPrettyString() const
 {
         std::stringstream sstr;
         sstr << "x_" << 0 << " + " << "x_" << m_a  << " + "
-             << "x_" << m_b << "." << "x_" <<  m_c << " + " << "x_" << m_d << " + "
+             << "x_" << m_b << " + " << "x_" <<  m_c << " + " << "x_" << m_d << " + "
              << "(x_" << m_e << "." << "x_" << m_f << ")";
 
         return sstr.str();
@@ -501,33 +501,11 @@ std::string Function_0_a_b_c_d_ef::toPrettyString() const
 
 
 /*
- * As for the first case, duplication comes from reverse functions
- * and commuttivity of . and +.
- * Considering the way functions are generated, we do not have to check
- * for cases with xa > xb or xb > xc or xc > xd, of xe > xf.
- * So non-canonicity due to commutativity is out of reach of our generation,
- * let's gain some time and code by not checking them.
- *
- * It's actually a bit hard to see how variables are sorted in the reverse
- * function anyway, so we'll test several variations of the reverse.
- *
- * Base function:
- *      x0 + xa + xb + xc + xd + xe.xf
- *
- * with xar = N - xa, ... :
- *
- * reverse:
- *      x0 + xar + xbr + xce + xdr + xer.xfr
- *
- * As we know that the base function has the following:
- *      xa < xb < xc < xd
- *      xe < xf
- * we can deduce that the lexicographically minimal version of
- * this reverse function is:
- *
- * x0 + xdr + xcr + xbr + xar + xfr.xer
- *
- * Hence, this is the only check we have to perform.
+ * Considering that the base version verifies
+ *      a < b < c < d
+ *      e < f
+ * the smallest version of the reverse function is:
+ *      dr + cr + br + ar + fr.er
  *
  */
 inline bool Function_0_a_b_c_d_ef::isCanonicalForm() const
@@ -539,30 +517,30 @@ inline bool Function_0_a_b_c_d_ef::isCanonicalForm() const
         int32_t er = m_nVariables - m_e;
         int32_t fr = m_nVariables - m_f;
 
-        return smaller_or_equal(dr, cr, br, ar, fr, er);
+        return smaller_or_equal(Function_0_a_b_c_d_ef(dr, cr, br, ar, fr, er, m_nVariables));
 }
 
 
 
-inline bool Function_0_a_b_c_d_ef::smaller_or_equal(
-                int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f) const
+inline bool Function_0_a_b_c_d_ef::smaller_or_equal(Function_0_a_b_c_d_ef other) const
 {
-        if (m_a < a)
+        if (m_a < other.m_a)
                 return true;
 
-        if (m_a == a && m_b < b)
+        if (m_a == other.m_a && m_b < other.m_b)
                 return true;
 
-        if (m_a == a && m_b == b && m_c < c)
+        if (m_a == other.m_a && m_b == other.m_b && m_c < other.m_c)
                 return true;
 
-        if (m_a == a && m_b == b && m_c == c && m_d < d)
+        if (m_a == other.m_a && m_b == other.m_b && m_c == other.m_c && m_d < other.m_d)
                 return true;
 
-        if (m_a == a && m_b == b && m_c == c && m_d < d && m_e < e)
+        if (m_a == other.m_a && m_b == other.m_b && m_c == other.m_c && m_d == other.m_d && m_e < other.m_e)
                 return true;
 
-        if (m_a == a && m_b == b && m_c == c && m_d == d && m_e == e && m_f <= f)
+        if (m_a == other.m_a && m_b == other.m_b && m_c == other.m_c
+         && m_d == other.m_d && m_e == other.m_e && m_f <= other.m_f)
                 return true;
 
         return false;

@@ -91,7 +91,7 @@ class Function_0_a_b_cd : public Function
                 int32_t m_b;
                 int32_t m_c;
                 int32_t m_d;
-                bool smaller_or_equal(int32_t a, int32_t b, int32_t c, int32_t d) const;
+                bool smaller_or_equal(Function_0_a_b_cd other) const;
 
         protected:
                 virtual inline uint32_t nextVal() {
@@ -131,9 +131,8 @@ class Function_0_a_bc_de : public Function
                 int32_t m_c;
                 int32_t m_d;
                 int32_t m_e;
-                bool smaller_or_equal(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e) const;
+                bool smaller_or_equal(Function_0_a_bc_de other) const;
 
-                //XXX did I break this ? Try some cycles by hand, it's weird here...
         protected:
                 virtual inline uint32_t nextVal() {
                         uint32_t newBit = bit(0, m_curVal) ^ bit(m_a, m_curVal) ^
@@ -171,7 +170,7 @@ class Function_0_a_b_c_d_ef : public Function
                 int32_t m_d;
                 int32_t m_e;
                 int32_t m_f;
-                bool smaller_or_equal(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f) const;
+                bool smaller_or_equal(Function_0_a_b_c_d_ef other) const;
 
         protected:
                 virtual inline uint32_t nextVal() {
