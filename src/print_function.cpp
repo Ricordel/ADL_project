@@ -101,6 +101,8 @@ int main(int argc, char **argv)
                 func = new Function_0_a_bc_de(progOptions.funcString, progOptions.nVariables);
         } else if (progOptions.funcKind == "0_a_b_c_d_ef") {
                 func = new Function_0_a_b_c_d_ef(progOptions.funcString, progOptions.nVariables);
+        } else if (progOptions.funcKind == "0_a_b_cde") {
+                func = new Function_0_a_b_cde(progOptions.funcString, progOptions.nVariables);
         } else {
                 std::cerr << "Function kind " << progOptions.funcKind << " not recognized" << std::endl;
                 exit(0);

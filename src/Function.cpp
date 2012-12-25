@@ -5,6 +5,32 @@
 #include "Function.hpp"
 
 
+
+#define PARSE_NUM(__var, __name, __form) \
+do { \
+        try { \
+                __var = std::stoi(strRepr.substr(curPos), &substrPos); \
+                curPos += substrPos; \
+        } catch (std::exception& e) { \
+                throw std::runtime_error( \
+                                "Failed to parse " + strRepr + " as a function " + __form + ":" \
+                                "cannot parse " + __name); \
+        } \
+} while (0)
+
+
+#define EAT(__c, __after) \
+do { \
+        if (strRepr[curPos++] != __c) { \
+                throw std::runtime_error( \
+                                "Failed to parse " + strRepr + "there " \
+                                "should be a '" + __c + "' after '" + __after + "'"); \
+        } \
+} while (0)
+
+
+
+
 Function::Function(uint32_t nVariables) : m_nVariables(nVariables) {}
 
 /* We need a virtual destructor, eventhough it does nothing */
@@ -48,80 +74,17 @@ Function_0_a_b_cd::Function_0_a_b_cd(const std::string& strRepr, uint32_t nVaria
         size_t curPos = 0;
         size_t substrPos = 1234567;
 
-        if (strRepr[curPos++] != '0' || strRepr[curPos++] != ',') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c.d: "
-                                "does not start with '0,'");
-        }
-
-
-        // Parse a number
-        try {
-                m_a = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c.d: "
-                                "cannot parse 'a'");
-        }
-
-        // Check next is a comma
-        if (strRepr[curPos++] != ',') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c.d: "
-                                "should be a ',' after 'a'");
-        }
-
-        // Parse b
-        try {
-                m_b = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c.d: "
-                                "cannot parse 'b'");
-        }
-
-        // Check next is a comma and opening parenthese
-        if (strRepr[curPos++] != ',' || strRepr[curPos++] != '(') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c.d: "
-                                "should be ',(' after 'b'");
-        }
-
-        // parse c
-        try {
-                m_c = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c.d: "
-                                "cannot parse 'c'");
-        }
-
-        // Check next is a comma
-        if (strRepr[curPos++] != ',') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c.d: "
-                                "should be ',' after 'c'");
-        }
-
-        // parse d
-        try {
-                m_d = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c.d: "
-                                "cannot parse 'd'");
-        }
-
-        // Check next is a closing parenthese
-        if (strRepr[curPos++] != ')') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c.d: "
-                                "should be ')' after 'd'");
-        }
+        EAT('0', "start");
+        EAT(',', "0");
+        PARSE_NUM(m_a, "a", "0 + a + b + c.d");
+        EAT(',', "a");
+        PARSE_NUM(m_b, "b", "0 + a + b + c.d");
+        EAT(',', "b");
+        EAT('(', "b,");
+        PARSE_NUM(m_c, "c", "0 + a + b + c.d");
+        EAT(',', "c");
+        PARSE_NUM(m_d, "d", "0 + a + b + c.d");
+        EAT(')', "d");
 
         // Check it's the end
         if (curPos != strRepr.length()) {
@@ -261,93 +224,31 @@ Function_0_a_bc_de::Function_0_a_bc_de(const std::string& strRepr, uint32_t nVar
         size_t curPos = 0;
         size_t substrPos = 1234567;
 
-        if (strRepr[curPos++] != '0' || strRepr[curPos++] != ',') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b.c + d.e: "
-                                "does not start with '0,'");
-        }
+        EAT('0', "start");
+        EAT(',', "0");
 
+        PARSE_NUM(m_a, "a", "0 + a + b.c + d.e");
 
-        // Parse a
-        try {
-                m_a = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b.c + d.e: "
-                                "cannot parse 'a'");
-        }
+        EAT(',', "a");
+        EAT('(', "a,");
 
-        if (strRepr[curPos++] != ',' || strRepr[curPos++] != '(') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b.c + d.e: "
-                                "should be a ',(' after 'a'");
-        }
+        PARSE_NUM(m_b, "b", "0 + a + b.c + d.e");
 
-        // Parse b
-        try {
-                m_b = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b.c + d.e: "
-                                "cannot parse 'b'");
-        }
+        EAT(',', "b");
 
-        if (strRepr[curPos++] != ',') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b.c + d.e: "
-                                "should be ',' after 'b'");
-        }
+        PARSE_NUM(m_c, "c", "0 + a + b.c + d.e");
 
-        // parse c
-        try {
-                m_c = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b.c + d.e: "
-                                "cannot parse 'c'");
-        }
+        EAT(')', "c");
+        EAT(',', "c)");
+        EAT('(', "c(,");
 
-        if (strRepr[curPos++] != ')' || strRepr[curPos++] != ',' || strRepr[curPos++] != '(') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b.c + d.e: "
-                                "should be '),(' after 'c'");
-        }
+        PARSE_NUM(m_d, "d", "0 + a + b.c + d.e");
 
+        EAT(',', "d");
 
-        // parse d
-        try {
-                m_d = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b.c + d.e: "
-                                "cannot parse 'd'");
-        }
+        PARSE_NUM(m_e, "e", "0 + a + b.c + d.e");
 
-        if (strRepr[curPos++] != ',') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b.c + d.e: "
-                                "should be ',' after 'd'");
-        }
-
-        // parse e
-        try {
-                m_e = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b.c + d.e: "
-                                "cannot parse 'e'");
-        }
-
-        if (strRepr[curPos++] != ')') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b.c + d.e: "
-                                "should be ')' after 'e'");
-        }
+        EAT(')', "e");
 
         // Check it's the end
         if (curPos != strRepr.length()) {
@@ -554,117 +455,144 @@ Function_0_a_b_c_d_ef::Function_0_a_b_c_d_ef(const std::string& strRepr, uint32_
         size_t curPos = 0;
         size_t substrPos = 1234567;
 
-        if (strRepr[curPos++] != '0' || strRepr[curPos++] != ',') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
-                                "does not start with '0,'");
-        }
-
-
-        // Parse a
-        try {
-                m_a = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
-                                "cannot parse 'a'");
-        }
-
-        if (strRepr[curPos++] != ',') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
-                                "should be a ',' after 'a'");
-        }
-
-        // Parse b
-        try {
-                m_b = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
-                                "cannot parse 'b'");
-        }
-
-        if (strRepr[curPos++] != ',') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
-                                "should be ',' after 'b'");
-        }
-
-        // parse c
-        try {
-                m_c = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
-                                "cannot parse 'c'");
-        }
-
-        if (strRepr[curPos++] != ',') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
-                                "should be ',' after 'c'");
-        }
-
-
-        // parse d
-        try {
-                m_d = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
-                                "cannot parse 'd'");
-        }
-
-        if (strRepr[curPos++] != ',' || strRepr[curPos++] != '(') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
-                                "should be ',(' after 'd'");
-        }
-
-        // parse e
-        try {
-                m_e = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
-                                "cannot parse 'e'");
-        }
-
-        if (strRepr[curPos++] != ',') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
-                                "should be ')' after 'e'");
-        }
-
-        
-        // parse f
-        try {
-                m_f = std::stoi(strRepr.substr(curPos), &substrPos);
-                curPos += substrPos;
-        } catch (std::exception& e) {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
-                                "cannot parse 'f'");
-        }
-
-
-        if (strRepr[curPos++] != ')') {
-                throw std::runtime_error(
-                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
-                                "should be ')' after 'f'");
-        }
-
+        EAT('0', "start");
+        EAT(',', "0");
+        PARSE_NUM(m_a, "a", "0 + a + b + c + d + e.f");
+        EAT(',', "a");
+        PARSE_NUM(m_b, "b", "0 + a + b + c + d + e.f");
+        EAT(',', "b");
+        PARSE_NUM(m_c, "c", "0 + a + b + c + d + e.f");
+        EAT(',', "c");
+        PARSE_NUM(m_d, "d", "0 + a + b + c + d + e.f");
+        EAT(',', "d");
+        EAT('(', "d,");
+        PARSE_NUM(m_e, "e", "0 + a + b + c + d + e.f");
+        EAT(',', "e");
+        PARSE_NUM(m_f, "f", "0 + a + b + c + d + e.f");
+        EAT(')', "f");
 
         // Check it's the end
         if (curPos != strRepr.length()) {
                 throw std::runtime_error(
                                 "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "shouldn't be anything after ')'");
+        }
+}
+
+
+
+/***********************************************************************
+ ******************** For x0 + xa + xb + xc.xd.xe **********************
+ ***********************************************************************/
+
+
+Function_0_a_b_cde::Function_0_a_b_cde()
+        : Function(0), m_a(0), m_b(0), m_c(0), m_d(0), m_e(0)
+{}
+
+
+Function_0_a_b_cde::Function_0_a_b_cde(int32_t a, int32_t b, int32_t c,
+                                       int32_t d, int32_t e, uint32_t nVariables)
+        : Function(nVariables), m_a(a), m_b(b), m_c(c), m_d(d), m_e(e)
+{}
+
+
+Function_0_a_b_cde::~Function_0_a_b_cde() {}
+
+
+
+
+std::string Function_0_a_b_cde::toString() const
+{
+        std::ostringstream sstr;
+        sstr << m_nVariables << " variables: "
+             << 0 << "," << m_a  << "," << m_b << ",(" << m_c << "," << m_d << "," << m_e << ")";
+
+        return sstr.str();
+}
+
+
+std::string Function_0_a_b_cde::toPrettyString() const
+{
+        std::stringstream sstr;
+        sstr << "x_" << 0 << " + " << "x_" << m_a  << " + " << "x_" << m_b << " + "
+             << "x_" <<  m_c << "." << "x_" << m_d << "." << "x_" << m_e;
+
+        return sstr.str();
+}
+
+
+
+/*
+ * Considering that the base version verifies
+ *      a < b
+ *      c < d < e
+ * the smallest version of the reverse function is:
+ *      br + ar + er.dr.cr
+ *
+ */
+inline bool Function_0_a_b_cde::isCanonicalForm() const
+{
+        int32_t ar = m_nVariables - m_a;
+        int32_t br = m_nVariables - m_b;
+        int32_t cr = m_nVariables - m_c;
+        int32_t dr = m_nVariables - m_d;
+        int32_t er = m_nVariables - m_e;
+
+        return smaller_or_equal(Function_0_a_b_cde(br, ar, er, dr, cr, m_nVariables));
+}
+
+
+
+inline bool Function_0_a_b_cde::smaller_or_equal(Function_0_a_b_cde other) const
+{
+        if (m_a < other.m_a)
+                return true;
+
+        if (m_a == other.m_a && m_b < other.m_b)
+                return true;
+
+        if (m_a == other.m_a && m_b == other.m_b && m_c < other.m_c)
+                return true;
+
+        if (m_a == other.m_a && m_b == other.m_b && m_c == other.m_c && m_d < other.m_d)
+                return true;
+
+        if (m_a == other.m_a && m_b == other.m_b && m_c == other.m_c && m_d == other.m_d && m_e <= other.m_e)
+                return true;
+
+        return false;
+}
+                
+
+
+
+Function_0_a_b_cde::Function_0_a_b_cde(const std::string& strRepr, uint32_t nVariables)
+        throw (std::runtime_error)
+        : Function(nVariables)
+{
+        size_t curPos = 0;
+        size_t substrPos = 1234567;
+
+
+        EAT('0', "start");
+        EAT(',', "0");
+        PARSE_NUM(m_a, "a", "0 + a + b + c + d + e.f");
+        EAT(',', "a");
+        PARSE_NUM(m_b, "b", "0 + a + b + c + d + e.f");
+        EAT(',', "b");
+        EAT('(', "b,");
+        PARSE_NUM(m_c, "c", "0 + a + b + c + d + e.f");
+        EAT(',', "c");
+        PARSE_NUM(m_d, "d", "0 + a + b + c + d + e.f");
+        EAT(',', "d");
+        PARSE_NUM(m_e, "e", "0 + a + b + c + d + e.f");
+        EAT(')', "e");
+
+        // Check it's the end
+        if (curPos != strRepr.length()) {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c.d.e: "
                                 "shouldn't be anything after ')'");
         }
 }

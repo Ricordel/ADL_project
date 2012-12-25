@@ -186,4 +186,42 @@ class Function_0_a_b_c_d_ef : public Function
                 friend class FuncGenerator_0_a_b_c_d_ef;
 };
 
+
+
+
+class Function_0_a_b_cde : public Function
+{
+        public:
+                Function_0_a_b_cde();
+                Function_0_a_b_cde(int32_t a, int32_t b, int32_t c,
+                                   int32_t d, int32_t e, uint32_t m_nVariables);
+                Function_0_a_b_cde(const std::string& strRepr, uint32_t nVariables) throw (std::runtime_error);
+                virtual ~Function_0_a_b_cde();
+
+                virtual std::string toString() const;
+                virtual std::string toPrettyString() const;
+                virtual bool isCanonicalForm() const;
+
+        private:
+                int32_t m_a;
+                int32_t m_b;
+                int32_t m_c;
+                int32_t m_d;
+                int32_t m_e;
+                bool smaller_or_equal(Function_0_a_b_cde other) const;
+
+        protected:
+                virtual inline uint32_t nextVal() {
+                        uint32_t newBit = bit(0, m_curVal) ^ bit(m_a, m_curVal) ^ bit(m_b, m_curVal) ^
+                                          (bit(m_c, m_curVal) & bit(m_d, m_curVal) & bit(m_e, m_curVal));
+
+                        m_curVal = (m_curVal >> 1) | (newBit << (m_nVariables - 1));
+                        
+                        return m_curVal;
+                }
+
+
+                friend class FuncGenerator_0_a_b_cde;
+};
+
 #endif /* end of include guard: __FUNCTION_H__ */

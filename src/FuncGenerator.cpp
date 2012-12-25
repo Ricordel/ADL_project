@@ -181,3 +181,47 @@ void FuncGenerator_0_a_b_c_d_ef::reportMaxFunctions()
                 }
         }
 }
+
+
+
+
+
+
+/***********************************************************************
+ **************** For x0 + xa + xb + xc.xd.xe *******************
+ ***********************************************************************/
+
+FuncGenerator_0_a_b_cde::FuncGenerator_0_a_b_cde(uint32_t nVariables)
+        : m_nVariables(nVariables), m_maxPossibleLength((1 << m_nVariables) - 1)
+{}
+
+
+FuncGenerator_0_a_b_cde::~FuncGenerator_0_a_b_cde()
+{}
+
+
+void FuncGenerator_0_a_b_cde::reportMaxFunctions()
+{
+
+#pragma omp parallel for
+        for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
+                for (int32_t b = a + 1; b <= m_nVariables - 1; b++) {
+
+
+                        for (int32_t c = 1; c <= m_nVariables - 3; c++) { /* -3 to leave room for d and e */
+                                for (int32_t d = c + 1; d <= m_nVariables - 2; d++) {
+                                        for (int32_t e = d + 1; e <= m_nVariables - 1; e++) {
+
+                                                Function_0_a_b_cde func(a, b, c, d, e, m_nVariables);
+
+                                                if (func.isCanonicalForm()
+                                                 && func.getCycleLength() == this->getMaxPossibleLength()) {
+                                                        #pragma omp critical
+                                                        std::cout << func.toString() << std::endl;
+                                                }
+                                        }
+                                }
+                        }
+                }
+        }
+}

@@ -37,9 +37,20 @@ int main(int argc, const char *argv[])
         (void)argc;
         (void)argv;
 
-        report_max_functions(6, 6);
+        report_max_functions(5, 5);
 
         return 0;
+}
+
+
+template <class FuncGenerator> void report_for_generator(uint32_t nVariables)
+{
+                FuncGenerator generator(nVariables);
+
+                std::cerr << std::endl << "*** Checking functions "
+                        << generator.stringForm() << " for " << nVariables << " variables ***"
+                        << std::endl;
+                generator.reportMaxFunctions();
 }
 
 
@@ -53,39 +64,10 @@ void report_max_functions(uint32_t minNVariables, uint32_t maxNVariavles)
                           << "========= Testing for " << nVariables << " variables =========="
                           << std::endl;
 
-                try {
-                        std::cerr << std::endl << "*** Checking functions "
-                                  << "x0 + xa + xb + xc.xd for " << nVariables << " variables ***"
-                                  << std::endl;
-                        FuncGenerator_0_a_b_cd generator_0_a_b_cd(nVariables);
-                        generator_0_a_b_cd.reportMaxFunctions();
-
-                } catch (NotEnoughVariablesException& e) {
-                        std::cerr << nVariables << " is not enough variables for for a + b.c + d.e" << std::endl;
-                }
-
-
-                try {
-                        std::cerr << std::endl << "*** Checking functions "
-                                  << "x0 + xa + xb.xc + xd.xe for " << nVariables << " variables ***"
-                                  << std::endl;
-                        FuncGenerator_0_a_bc_de generator_0_a_bc_de(nVariables);
-                        generator_0_a_bc_de.reportMaxFunctions();
-
-                } catch (NotEnoughVariablesException& e) {
-                        std::cerr << nVariables << " is not enough variables for for a + b.c + d.e" << std::endl;
-                }
-
-                try {
-                        std::cerr << std::endl << "*** Checking functions "
-                                  << "x0 + xa + xb + xc + xd + xe.xf for " << nVariables << " variables ***"
-                                  << std::endl;
-                        FuncGenerator_0_a_b_c_d_ef generator_0_a_b_c_d_ef(nVariables);
-                        generator_0_a_b_c_d_ef.reportMaxFunctions();
-
-                } catch (NotEnoughVariablesException& e) {
-                        std::cerr << nVariables << " is not enough variables for for a + b + c + d +e.f" << std::endl;
-                }
+                report_for_generator<FuncGenerator_0_a_b_cd>(nVariables);
+                report_for_generator<FuncGenerator_0_a_bc_de>(nVariables);
+                report_for_generator<FuncGenerator_0_a_b_c_d_ef>(nVariables);
+                report_for_generator<FuncGenerator_0_a_b_cde>(nVariables);
 
                 // Place other generators for other kinds of functions here
         }

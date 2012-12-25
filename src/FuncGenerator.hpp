@@ -55,6 +55,13 @@ class FuncGenerator_0_a_b_cd
 
                 /* Generate and report functions of maximum cycle length */
                 void reportMaxFunctions();
+                
+
+                inline std::string stringForm() const
+                {
+                        return "x0 + xa + xb + xc.xd";
+                }
+
 
 
         private:
@@ -73,12 +80,6 @@ class FuncGenerator_0_a_bc_de
                 FuncGenerator_0_a_bc_de(uint32_t nVariables);
                 ~FuncGenerator_0_a_bc_de();
 
-                /* This functions returns the next Function instance belonging to the form
-                 * a + b + c.d for nVariables number of variables.
-                 * Throws a NoMoreFunctionsException if all possible functions (without
-                 * symetric) have been seen.
-                 */
-                //Function_0_a_bc_de *getNextFunction() throw (NoMoreFunctionsException);
 
                 /* Returns the maximum possible length of a cycle for this kind of function
                  * and this number of variables. This is 2^n - 1 where n is the number of
@@ -91,6 +92,10 @@ class FuncGenerator_0_a_bc_de
                 /* Generate and report functions of maximum cycle length */
                 void reportMaxFunctions();
 
+                inline std::string stringForm() const
+                {
+                        return "x0 + xa + xb.xc + xd.xe";
+                }
 
         private:
                 int32_t m_nVariables;
@@ -107,12 +112,36 @@ class FuncGenerator_0_a_b_c_d_ef
                 FuncGenerator_0_a_b_c_d_ef(uint32_t nVariables);
                 ~FuncGenerator_0_a_b_c_d_ef();
 
-                /* This functions returns the next Function instance belonging to the form
-                 * a + b + c.d for nVariables number of variables.
-                 * Throws a NoMoreFunctionsException if all possible functions (without
-                 * symetric) have been seen.
-                 */
-                //Function_0_a_bc_de *getNextFunction() throw (NoMoreFunctionsException);
+                /* Returns the maximum possible length of a cycle for this kind of function
+                 * and this number of variables. This is 2^n - 1 where n is the number of
+                 * variables. */
+                inline uint32_t getMaxPossibleLength() const
+                {
+                        return m_maxPossibleLength;
+                }
+
+                /* Generate and report functions of maximum cycle length */
+                void reportMaxFunctions();
+
+                inline std::string stringForm() const
+                {
+                        return "x0 + xa + xb + xc + xd + xe.xf";
+                }
+
+
+        private:
+                int32_t m_nVariables;
+                uint32_t m_maxPossibleLength;
+};
+
+
+
+
+class FuncGenerator_0_a_b_cde
+{
+        public:
+                FuncGenerator_0_a_b_cde(uint32_t nVariables);
+                ~FuncGenerator_0_a_b_cde();
 
                 /* Returns the maximum possible length of a cycle for this kind of function
                  * and this number of variables. This is 2^n - 1 where n is the number of
@@ -124,6 +153,11 @@ class FuncGenerator_0_a_b_c_d_ef
 
                 /* Generate and report functions of maximum cycle length */
                 void reportMaxFunctions();
+
+                inline std::string stringForm() const
+                {
+                        return "x0 + xa + xb + xc.xd.xe";
+                }
 
 
         private:
