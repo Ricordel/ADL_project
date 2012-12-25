@@ -1,4 +1,6 @@
 #include <vector>
+#include <getopt.h>
+#include <omp.h>
 
 #include "dbg.h"
 #include "FuncGenerator.hpp"
@@ -31,13 +33,63 @@ void report_max_functions_for_generator(FuncGenerator& generator);
 void print_details(std::vector<Function *> maxFunctions, std::ostream& outStream);
 
 
+/* 
+ * Command-line option
+ */
+static const struct option longOpts[] = {
+        {"from", required_argument, NULL, 'f'},
+        {"to", required_argument, NULL, 't'},
+        {"n-vars", required_argument, NULL, 'n'}
+};
 
-int main(int argc, const char *argv[])
+const char *shortOpts = "ft";
+
+struct {
+        uint32_t from;
+        uint32_t to;
+} globalOptions;
+
+
+int main(int argc, char *argv[])
 {
-        (void)argc;
-        (void)argv;
+        globalOptions.from = 0;
+        globalOptions.to   = 0;
 
-        report_max_functions(5, 5);
+        int longIndex; /* unused, but necessary for getopt */
+
+        int opt = getopt_long(argc, argv, shortOpts, longOpts, &longIndex);
+        while (opt != -1) {
+                switch(opt) {
+                        case 'f': globalOptions.from = std::stoi(std::string(optarg));
+                                  break;
+                        case 't': globalOptions.to = std::stoi(std::string(optarg));
+                                  break;
+                        case 'n': globalOptions.from = std::stoi(std::string(optarg));
+                                  globalOptions.to = std::stoi(std::string(optarg));
+                                  break;
+                        default:
+                                  std::cerr << "Default case should not be reached" << std::endl;
+                                  exit(1);
+                }
+
+                opt = getopt_long(argc, argv, shortOpts, longOpts, &longIndex);
+        }
+                                  
+        if (globalOptions.from == 0 || globalOptions.to == 0) {
+                std::cerr << "Usage: " << std::endl
+                          << argv[0] << " --from start_num_variables --to end_num_variables" << std::endl
+                          << argv[0] << " --n-vars num_variables" << std::endl;
+                exit(1);
+        }
+
+        if (globalOptions.from > globalOptions.to) {
+                std::cerr << "'to' must be larger or equal to 'from'" << std::endl;
+                exit(1);
+        }
+
+
+
+        report_max_functions(globalOptions.from, globalOptions.to);
 
         return 0;
 }
