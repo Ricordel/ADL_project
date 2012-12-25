@@ -89,7 +89,11 @@ int main(int argc, char *argv[])
 
 
 
+#pragma omp parallel
+        {
+#pragma omp single
         report_max_functions(globalOptions.from, globalOptions.to);
+        }
 
         return 0;
 }
@@ -123,6 +127,7 @@ void report_max_functions(uint32_t minNVariables, uint32_t maxNVariavles)
 
                 // Place other generators for other kinds of functions here
         }
+
 }
 
 

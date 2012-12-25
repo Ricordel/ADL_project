@@ -65,24 +65,27 @@ void FuncGenerator_0_a_b_cd::reportMaxFunctions()
         // goes to the end.
 
 
-#pragma omp parallel for
         for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
                 for (int32_t b = a + 1; b <= m_nVariables - 1; b++) {
 
                         for (int32_t c = 1; c <= m_nVariables - 2; c++) {
                                 for (int32_t d = c + 1; d <= m_nVariables - 1; d++) {
 
+                                #pragma omp task firstprivate(a, b, c, d)
+                                {
                                         Function_0_a_b_cd func(a, b, c, d, m_nVariables);
 
                                         if (func.isCanonicalForm()
-                                         && func.getCycleLength() == this->getMaxPossibleLength()) {
+                                         && func.getCycleLength() == m_maxPossibleLength) {
                                                 #pragma omp critical
                                                 std::cout << func.toString() << std::endl;
                                         }
+                                } // end of task
                                 }
                         }
                 }
         }
+        #pragma omp taskwait
 }
 
 
@@ -116,7 +119,6 @@ void FuncGenerator_0_a_bc_de::reportMaxFunctions()
         // We don't want b = c AND d = e either, which gives us kind of a "degenerated" function.
         // This is also handled in isCanonicalForm()
 
-#pragma omp parallel for
         for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
 
                 for (int32_t b = 1; b <= m_nVariables - 2; b++) {
@@ -125,18 +127,22 @@ void FuncGenerator_0_a_bc_de::reportMaxFunctions()
                                 for (int32_t d = b; d <= m_nVariables - 2; d++) {
                                         for (int32_t e = d + 1; e <= m_nVariables - 1; e++) {
 
+                                        #pragma omp task firstprivate(a, b, c, d, e)
+                                        {
                                                 Function_0_a_bc_de func(a, b, c, d, e, m_nVariables);
                                                 
                                                 if (func.isCanonicalForm()
-                                                 && func.getCycleLength() == this->getMaxPossibleLength()) {
+                                                 && func.getCycleLength() == m_maxPossibleLength) {
                                                         #pragma omp critical
                                                         std::cout << func.toString() << std::endl;
                                                 }
+                                        } // end of task
                                         }
                                 }
                         }
                 }
         }
+        #pragma omp taskwait
 }
 
 
@@ -158,7 +164,6 @@ FuncGenerator_0_a_b_c_d_ef::~FuncGenerator_0_a_b_c_d_ef()
 void FuncGenerator_0_a_b_c_d_ef::reportMaxFunctions()
 {
 
-#pragma omp parallel for
         for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
                 for (int32_t b = a + 1; b <= m_nVariables - 3; b++) { /* -3 to leave room for c and d */
                         for (int32_t c = b + 1; c <= m_nVariables - 2; c++) { /* -2 to leave room for d */
@@ -167,19 +172,25 @@ void FuncGenerator_0_a_b_c_d_ef::reportMaxFunctions()
                                         for (int32_t e = 1; e <= m_nVariables - 2; e++) {
                                                 for (int32_t f = e + 1; f <= m_nVariables - 1; f++) {
 
+                                                #pragma omp task firstprivate(a)
+                                                {
                                                         Function_0_a_b_c_d_ef func(a, b, c, d, e, f, m_nVariables);
+
                                                         
                                                         if (func.isCanonicalForm()
-                                                         && func.getCycleLength() == this->getMaxPossibleLength()) {
+                                                         && func.getCycleLength() == m_maxPossibleLength) {
                                                                 #pragma omp critical
                                                                 std::cout << func.toString() << std::endl;
                                                         }
+                                                } // end of task
                                                 }
                                         }
                                 }
                         }
                 }
         }
+
+        #pragma omp taskwait
 }
 
 
@@ -203,7 +214,6 @@ FuncGenerator_0_a_b_cde::~FuncGenerator_0_a_b_cde()
 void FuncGenerator_0_a_b_cde::reportMaxFunctions()
 {
 
-#pragma omp parallel for
         for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
                 for (int32_t b = a + 1; b <= m_nVariables - 1; b++) {
 
@@ -212,16 +222,20 @@ void FuncGenerator_0_a_b_cde::reportMaxFunctions()
                                 for (int32_t d = c + 1; d <= m_nVariables - 2; d++) {
                                         for (int32_t e = d + 1; e <= m_nVariables - 1; e++) {
 
+                                        #pragma omp task firstprivate(a, b, c, d, e)
+                                        {
                                                 Function_0_a_b_cde func(a, b, c, d, e, m_nVariables);
 
                                                 if (func.isCanonicalForm()
-                                                 && func.getCycleLength() == this->getMaxPossibleLength()) {
+                                                 && func.getCycleLength() == m_maxPossibleLength) {
                                                         #pragma omp critical
                                                         std::cout << func.toString() << std::endl;
                                                 }
+                                        } // end of task
                                         }
                                 }
                         }
                 }
         }
+        #pragma omp taskwait
 }
