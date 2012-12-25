@@ -545,3 +545,126 @@ inline bool Function_0_a_b_c_d_ef::smaller_or_equal(Function_0_a_b_c_d_ef other)
 
         return false;
 }
+                
+
+Function_0_a_b_c_d_ef::Function_0_a_b_c_d_ef(const std::string& strRepr, uint32_t nVariables)
+        throw (std::runtime_error)
+        : Function(nVariables)
+{
+        size_t curPos = 0;
+        size_t substrPos = 1234567;
+
+        if (strRepr[curPos++] != '0' || strRepr[curPos++] != ',') {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "does not start with '0,'");
+        }
+
+
+        // Parse a
+        try {
+                m_a = std::stoi(strRepr.substr(curPos), &substrPos);
+                curPos += substrPos;
+        } catch (std::exception& e) {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "cannot parse 'a'");
+        }
+
+        if (strRepr[curPos++] != ',') {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "should be a ',' after 'a'");
+        }
+
+        // Parse b
+        try {
+                m_b = std::stoi(strRepr.substr(curPos), &substrPos);
+                curPos += substrPos;
+        } catch (std::exception& e) {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "cannot parse 'b'");
+        }
+
+        if (strRepr[curPos++] != ',') {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "should be ',' after 'b'");
+        }
+
+        // parse c
+        try {
+                m_c = std::stoi(strRepr.substr(curPos), &substrPos);
+                curPos += substrPos;
+        } catch (std::exception& e) {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "cannot parse 'c'");
+        }
+
+        if (strRepr[curPos++] != ',') {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "should be ',' after 'c'");
+        }
+
+
+        // parse d
+        try {
+                m_d = std::stoi(strRepr.substr(curPos), &substrPos);
+                curPos += substrPos;
+        } catch (std::exception& e) {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "cannot parse 'd'");
+        }
+
+        if (strRepr[curPos++] != ',' || strRepr[curPos++] != '(') {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "should be ',(' after 'd'");
+        }
+
+        // parse e
+        try {
+                m_e = std::stoi(strRepr.substr(curPos), &substrPos);
+                curPos += substrPos;
+        } catch (std::exception& e) {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "cannot parse 'e'");
+        }
+
+        if (strRepr[curPos++] != ',') {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "should be ')' after 'e'");
+        }
+
+        
+        // parse f
+        try {
+                m_f = std::stoi(strRepr.substr(curPos), &substrPos);
+                curPos += substrPos;
+        } catch (std::exception& e) {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "cannot parse 'f'");
+        }
+
+
+        if (strRepr[curPos++] != ')') {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "should be ')' after 'f'");
+        }
+
+
+        // Check it's the end
+        if (curPos != strRepr.length()) {
+                throw std::runtime_error(
+                                "Failed to parse " + strRepr + " as a function 0 + a + b + c + d + e.f: "
+                                "shouldn't be anything after ')'");
+        }
+}

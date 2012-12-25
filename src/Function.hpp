@@ -155,8 +155,7 @@ class Function_0_a_b_c_d_ef : public Function
                 Function_0_a_b_c_d_ef();
                 Function_0_a_b_c_d_ef(int32_t a, int32_t b, int32_t c, int32_t d,
                                       int32_t e, int32_t f, uint32_t m_nVariables);
-                //XXX see later for this one
-                //Function_0_a_b_c_d_ef(const std::string& strRepr, uint32_t nVariables) throw (std::runtime_error);
+                Function_0_a_b_c_d_ef(const std::string& strRepr, uint32_t nVariables) throw (std::runtime_error);
                 virtual ~Function_0_a_b_c_d_ef();
 
                 virtual std::string toString() const;

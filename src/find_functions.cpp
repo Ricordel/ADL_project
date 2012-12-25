@@ -37,7 +37,7 @@ int main(int argc, const char *argv[])
         (void)argc;
         (void)argv;
 
-        report_max_functions(7, 7);
+        report_max_functions(6, 6);
 
         return 0;
 }
