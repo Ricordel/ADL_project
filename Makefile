@@ -1,5 +1,5 @@
 # Compiler options
-CXX = g++-4.7
+#CXX = g++
 CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG  -std=c++11 -pedantic -fopenmp -flto $(OPTFLAGS)
 #CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG  -std=c++11 -pedantic -fopenmp -flto $(OPTFLAGS) -g -pg
 
