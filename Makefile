@@ -48,20 +48,13 @@ dev: all
 
 
 
-test: depends $(OBJS)
-	cd tests && $(MAKE) run
-
-
 depends: buildrepo
 	@./scripts/make_depends.sh $(SRCDIR) $(OBJDIR)
 
 
 clean:
 	rm -f find_functions print_function $(OBJDIR) -Rf
-	cd tests && $(MAKE) clean
 
-cleanall: clean
-	cd tests && $(MAKE) cleanall
 
 tags:
 	ctags -R
