@@ -2,9 +2,15 @@
 #include <string>
 #include <omp.h>
 
+#ifdef WITHOUT_CPP11
+#include <cstdlib>
+#endif
+
 #include "Function.hpp"
 
 
+/* Switch for old fashioned g++ that does not support C++11 */
+#ifndef WITHOUT_CPP11
 
 #define PARSE_NUM(__var, __name, __form) \
 do { \
@@ -29,6 +35,7 @@ do { \
 } while (0)
 
 
+#endif /* ifndef WITHOUT_CPP11 */
 
 
 Function::Function(uint32_t nVariables) : m_nVariables(nVariables) {}
@@ -65,6 +72,8 @@ Function_0_a_b_cd::Function_0_a_b_cd(int32_t a, int32_t b, int32_t c, int32_t d,
 {}
 
 
+#ifndef WITHOUT_CPP11
+
 Function_0_a_b_cd::Function_0_a_b_cd(const std::string& strRepr, uint32_t nVariables)
         throw (std::runtime_error) : Function(nVariables)
 {
@@ -93,6 +102,8 @@ Function_0_a_b_cd::Function_0_a_b_cd(const std::string& strRepr, uint32_t nVaria
                                 "shouldn't be anything after ')'");
         }
 }
+
+#endif /* ifndef WITHOUT_CPP11 */
 
 
 Function_0_a_b_cd::~Function_0_a_b_cd() {}
@@ -215,6 +226,8 @@ Function_0_a_bc_de::Function_0_a_bc_de(int32_t a, int32_t b, int32_t c,
 {}
 
 
+#ifndef WITHOUT_CPP11
+
 Function_0_a_bc_de::Function_0_a_bc_de(const std::string& strRepr, uint32_t nVariables)
         throw (std::runtime_error) : Function(nVariables)
 {
@@ -257,6 +270,8 @@ Function_0_a_bc_de::Function_0_a_bc_de(const std::string& strRepr, uint32_t nVar
                                 "shouldn't be anything after ')'");
         }
 }
+
+#endif /* ifndef WITHOUT_CPP11 */
 
 
 Function_0_a_bc_de::~Function_0_a_bc_de() {}
@@ -448,6 +463,8 @@ inline bool Function_0_a_b_c_d_ef::smaller_or_equal(Function_0_a_b_c_d_ef other)
 }
                 
 
+#ifndef WITHOUT_CPP11
+
 Function_0_a_b_c_d_ef::Function_0_a_b_c_d_ef(const std::string& strRepr, uint32_t nVariables)
         throw (std::runtime_error)
         : Function(nVariables)
@@ -478,6 +495,8 @@ Function_0_a_b_c_d_ef::Function_0_a_b_c_d_ef(const std::string& strRepr, uint32_
                                 "shouldn't be anything after ')'");
         }
 }
+
+#endif /* ifndef WITHOUT_CPP11 */
 
 
 
@@ -567,6 +586,8 @@ inline bool Function_0_a_b_cde::smaller_or_equal(Function_0_a_b_cde other) const
 
 
 
+#ifndef WITHOUT_CPP11
+
 Function_0_a_b_cde::Function_0_a_b_cde(const std::string& strRepr, uint32_t nVariables)
         throw (std::runtime_error)
         : Function(nVariables)
@@ -596,3 +617,5 @@ Function_0_a_b_cde::Function_0_a_b_cde(const std::string& strRepr, uint32_t nVar
                                 "shouldn't be anything after ')'");
         }
 }
+
+#endif /* ifndef WITHOUT_CPP11 */

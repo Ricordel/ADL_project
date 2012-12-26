@@ -2,6 +2,10 @@
 #include <getopt.h>
 #include <string>
 
+#ifdef WITHOUT_CPP11
+#include <cstdlib>
+#endif
+
 #include "Function.hpp"
 
 
@@ -67,7 +71,11 @@ int main(int argc, char **argv)
                 switch (opt) {
                         case 'n': std::cout << std::string(optarg) << std::endl;
                         
+#ifndef WITHOUT_CPP11
                                   progOptions.nVariables = std::stoi(std::string(optarg));
+#else
+                                  progOptions.nVariables = atoi(optarg);
+#endif
                                   break;
                         case 'f': progOptions.funcString = std::string(optarg);
                                   break;

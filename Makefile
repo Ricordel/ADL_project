@@ -1,12 +1,13 @@
 # Compiler options
-#CXX = g++
-CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG  -std=c++11 -pedantic -fopenmp -flto $(OPTFLAGS)
-#CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG  -std=c++11 -pedantic -fopenmp -flto $(OPTFLAGS) -g -pg
-
-# Superset
-LD = g++
+ifndef WITHOUT_CPP11
+CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG -pedantic -fopenmp -std=c++11 -flto $(OPTFLAGS)
 LDFLAGS = -lgomp -flto
-#LDFLAGS = -lgomp -flto -pg
+else
+CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG -pedantic -fopenmp -DWITHOUT_CPP11 $(OPTFLAGS)
+LDFLAGS = -lgomp
+endif
+
+LD = g++
 
 # Project name
 
@@ -27,7 +28,14 @@ DEPFILES    = $(patsubst %.o, %.d, $(OBJS))
 # Objs common to finder and function printer
 COMMON_OBJS = $(OBJDIR)/Function.o
 
-all: find_functions print_function
+ifndef WITHOUT_CPP11
+ALL=find_functions print_function
+else
+ALL=find_functions
+endif
+
+all: $(ALL)
+
 
 # Targets
 find_functions: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/FuncGenerator.o $(OBJDIR)/find_functions.o
@@ -42,7 +50,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 
 # dev is all + debug options: -g, -O0, -DDEBUG
 #XXX I get weird errors of undefined operator= in basic_string when compiling in O0
-dev: CXXFLAGS = -c -O1 -g -Wall -Wextra -Isrc  -std=c++11 -pedantic $(OPTFLAGS)
+dev: CXXFLAGS = -c -O1 -g -Wall -Wextra -Isrc -pedantic $(OPTFLAGS)
 dev: CPPFLAGS += -DDEBUG
 dev: all
 

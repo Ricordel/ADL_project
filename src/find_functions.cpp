@@ -1,6 +1,12 @@
 #include <vector>
 #include <getopt.h>
 #include <omp.h>
+#include <stdint.h>
+
+#ifdef WITHOUT_CPP11
+#include <cstdlib>
+#endif
+
 
 #include "dbg.h"
 #include "FuncGenerator.hpp"
@@ -24,13 +30,6 @@ template <class FuncGenerator>
 void report_max_functions_for_generator(FuncGenerator& generator);
 
 
-
-/*
- * This is more for debug. It prints the "pretty print" form of functions along with
- * their complete cycle.
- * NOTE: this can be VERY long with big functions !
- */
-void print_details(std::vector<Function *> maxFunctions, std::ostream& outStream);
 
 
 /* 
@@ -60,6 +59,7 @@ int main(int argc, char *argv[])
         int opt = getopt_long(argc, argv, shortOpts, longOpts, &longIndex);
         while (opt != -1) {
                 switch(opt) {
+#ifndef WITHOUT_CPP11
                         case 'f': globalOptions.from = std::stoi(std::string(optarg));
                                   break;
                         case 't': globalOptions.to = std::stoi(std::string(optarg));
@@ -67,6 +67,15 @@ int main(int argc, char *argv[])
                         case 'n': globalOptions.from = std::stoi(std::string(optarg));
                                   globalOptions.to = std::stoi(std::string(optarg));
                                   break;
+#else
+                        case 'f': globalOptions.from = atoi(optarg);
+                                  break;
+                        case 't': globalOptions.to = atoi(optarg);
+                                  break;
+                        case 'n': globalOptions.from = atoi(optarg);
+                                  globalOptions.to = atoi(optarg);
+                                  break;
+#endif
                         default:
                                   std::cerr << "Default case should not be reached" << std::endl;
                                   exit(1);
@@ -128,15 +137,4 @@ void report_max_functions(uint32_t minNVariables, uint32_t maxNVariavles)
                 // Place other generators for other kinds of functions here
         }
 
-}
-
-
-
-void print_details(std::vector<Function *> maxFunctions, std::ostream& outStream)
-{
-        outStream << std::endl;
-        for (auto pFunc : maxFunctions) {
-                pFunc->printDetails(outStream);
-                outStream << std::endl << std::endl;
-        }
 }

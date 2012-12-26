@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <stdexcept>
+#include <stdint.h>
 
 
 /* 
@@ -79,7 +80,9 @@ class Function_0_a_b_cd : public Function
                 Function_0_a_b_cd(Function_0_a_b_cd& other);
                 Function_0_a_b_cd(const Function_0_a_b_cd& other);
                 Function_0_a_b_cd(int32_t a, int32_t b, int32_t c, int32_t d, uint32_t m_nVariables);
+#ifndef WITHOUT_CPP11
                 Function_0_a_b_cd(const std::string& strRepr, uint32_t nVariables) throw (std::runtime_error);
+#endif
                 virtual ~Function_0_a_b_cd();
 
                 virtual std::string toString() const;
@@ -118,7 +121,9 @@ class Function_0_a_bc_de : public Function
                 Function_0_a_bc_de(Function_0_a_bc_de& other);
                 Function_0_a_bc_de(const Function_0_a_bc_de& other);
                 Function_0_a_bc_de(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, uint32_t m_nVariables);
+#ifndef WITHOUT_CPP11
                 Function_0_a_bc_de(const std::string& strRepr, uint32_t nVariables) throw (std::runtime_error);
+#endif
                 virtual ~Function_0_a_bc_de();
 
                 virtual std::string toString() const;
@@ -155,7 +160,9 @@ class Function_0_a_b_c_d_ef : public Function
                 Function_0_a_b_c_d_ef();
                 Function_0_a_b_c_d_ef(int32_t a, int32_t b, int32_t c, int32_t d,
                                       int32_t e, int32_t f, uint32_t m_nVariables);
+#ifndef WITHOUT_CPP11
                 Function_0_a_b_c_d_ef(const std::string& strRepr, uint32_t nVariables) throw (std::runtime_error);
+#endif
                 virtual ~Function_0_a_b_c_d_ef();
 
                 virtual std::string toString() const;
@@ -195,7 +202,9 @@ class Function_0_a_b_cde : public Function
                 Function_0_a_b_cde();
                 Function_0_a_b_cde(int32_t a, int32_t b, int32_t c,
                                    int32_t d, int32_t e, uint32_t m_nVariables);
+#ifndef WITHOUT_CPP11
                 Function_0_a_b_cde(const std::string& strRepr, uint32_t nVariables) throw (std::runtime_error);
+#endif
                 virtual ~Function_0_a_b_cde();
 
                 virtual std::string toString() const;
