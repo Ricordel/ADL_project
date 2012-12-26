@@ -11,6 +11,13 @@
  * Return the bit nBit of val in first position. That is, the return
  * value of this function is either 0 or 1.
  */
+#ifdef __CUDA
+static inline __device__ uint32_t bit_device(uint32_t nBit, uint32_t val)
+{
+        return (val >> nBit) & 1;
+}
+#endif
+
 static inline uint32_t bit(uint32_t nBit, uint32_t val)
 {
         return (val >> nBit) & 1;
@@ -88,6 +95,24 @@ class Function_0_a_b_cd : public Function
                 virtual std::string toString() const;
                 virtual std::string toPrettyString() const;
                 virtual bool isCanonicalForm() const;
+#ifdef __CUDA
+                __device__ uint32_t getCycleLength_device()
+                {
+                        int length = 0;
+                        m_curVal = 1;
+                        do {
+                                uint32_t newBit =
+                                        bit_device(0, m_curVal) ^ bit_device(m_a, m_curVal) ^ bit_device(m_b, m_curVal) ^
+                                       (bit_device(m_c, m_curVal) & bit_device(m_d, m_curVal));
+                                m_curVal = (m_curVal >> 1) | (newBit << (m_nVariables - 1));
+
+                                length++;
+                        } while (m_curVal != 1); /* back to start value */
+
+                        return length;
+                }
+#endif
+
 
         private:
                 int32_t m_a;
@@ -130,6 +155,25 @@ class Function_0_a_bc_de : public Function
                 virtual std::string toPrettyString() const;
                 virtual bool isCanonicalForm() const;
 
+
+#ifdef __CUDA
+                __device__ uint32_t getCycleLength_device()
+                {
+                        int length = 0;
+                        m_curVal = 1;
+                        do {
+                                uint32_t newBit = bit_device(0, m_curVal) ^ bit_device(m_a, m_curVal) ^
+                                                 (bit_device(m_b, m_curVal) & bit_device(m_c, m_curVal)) ^
+                                                 (bit_device(m_d, m_curVal) & bit_device(m_e, m_curVal));
+                                m_curVal = (m_curVal >> 1) | (newBit << (m_nVariables - 1));
+
+                                length++;
+                        } while (m_curVal != 1); /* back to start value */
+
+                        return length;
+                }
+#endif
+
         private:
                 int32_t m_a;
                 int32_t m_b;
@@ -168,6 +212,27 @@ class Function_0_a_b_c_d_ef : public Function
                 virtual std::string toString() const;
                 virtual std::string toPrettyString() const;
                 virtual bool isCanonicalForm() const;
+
+#ifdef __CUDA
+                __device__ uint32_t getCycleLength_device()
+                {
+                        int length = 0;
+                        m_curVal = 1;
+                        do {
+                                uint32_t newBit =
+                                        bit_device(0, m_curVal) ^ bit_device(m_a, m_curVal) ^ bit_device(m_b, m_curVal) ^
+                                        bit_device(m_c, m_curVal) ^ bit_device(m_d, m_curVal) ^
+                                       (bit_device(m_e, m_curVal) & bit_device(m_f, m_curVal));
+
+                                m_curVal = (m_curVal >> 1) | (newBit << (m_nVariables - 1));
+
+                                length++;
+                        } while (m_curVal != 1); /* back to start value */
+
+                        return length;
+                }
+#endif
+
 
         private:
                 int32_t m_a;
@@ -211,6 +276,26 @@ class Function_0_a_b_cde : public Function
                 virtual std::string toPrettyString() const;
                 virtual bool isCanonicalForm() const;
 
+
+#ifdef __CUDA
+                __device__ uint32_t getCycleLength_device()
+                {
+                        int length = 0;
+                        m_curVal = 1;
+                        do {
+                                uint32_t newBit =
+                                        bit_device(0, m_curVal) ^ bit_device(m_a, m_curVal) ^ bit_device(m_b, m_curVal) ^
+                                       (bit_device(m_c, m_curVal) & bit_device(m_d, m_curVal) & bit_device(m_e, m_curVal));
+
+                                m_curVal = (m_curVal >> 1) | (newBit << (m_nVariables - 1));
+
+                                length++;
+                        } while (m_curVal != 1); /* back to start value */
+
+                        return length;
+                }
+#endif
+
         private:
                 int32_t m_a;
                 int32_t m_b;
@@ -222,7 +307,7 @@ class Function_0_a_b_cde : public Function
         protected:
                 virtual inline uint32_t nextVal() {
                         uint32_t newBit = bit(0, m_curVal) ^ bit(m_a, m_curVal) ^ bit(m_b, m_curVal) ^
-                                          (bit(m_c, m_curVal) & bit(m_d, m_curVal) & bit(m_e, m_curVal));
+                                         (bit(m_c, m_curVal) & bit(m_d, m_curVal) & bit(m_e, m_curVal));
 
                         m_curVal = (m_curVal >> 1) | (newBit << (m_nVariables - 1));
                         

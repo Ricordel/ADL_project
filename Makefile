@@ -1,3 +1,6 @@
+CUDACC = nvcc
+CUDAFLAGS = -c -O0 -g
+
 # Compiler options
 ifndef WITHOUT_CPP11
 CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG -pedantic -fopenmp -std=c++11 -flto $(OPTFLAGS)
@@ -29,23 +32,29 @@ DEPFILES    = $(patsubst %.o, %.d, $(OBJS))
 COMMON_OBJS = $(OBJDIR)/Function.o
 
 ifndef WITHOUT_CPP11
-ALL=find_functions print_function
+ALL=find_functions_omp find_functions_cuda print_function
 else
-ALL=find_functions
+ALL=find_functions_omp
 endif
 
 all: $(ALL)
 
 
 # Targets
-find_functions: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/FuncGenerator.o $(OBJDIR)/find_functions.o
-	$(LD) $(LDFLAGS) $(COMMON_OBJS) $(OBJDIR)/FuncGenerator.o $(OBJDIR)/find_functions.o -o $@
+find_functions_omp: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_omp.o $(OBJDIR)/find_functions.o
+	$(LD) $(LDFLAGS) $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_omp.o $(OBJDIR)/find_functions.o -o $@
+
+find_functions_cuda: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_cuda.o $(OBJDIR)/find_functions.o
+	$(LD) $(LDFLAGS) -lcudart $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_cuda.o $(OBJDIR)/find_functions.o -o $@
 
 print_function: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/print_function.o
 	$(LD) $(LDFLAGS) $(COMMON_OBJS) $(OBJDIR)/print_function.o -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	$(CXX) $(CXXFLAGS) $(OPTS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $< -o $@
+	
+$(OBJDIR)/%.o: $(SRCDIR)/%.cu
+	$(CUDACC) $(CUDAFLAGS) $< -o $@
 	
 
 # dev is all + debug options: -g, -O0, -DDEBUG
