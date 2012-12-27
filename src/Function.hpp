@@ -6,23 +6,17 @@
 #include <stdexcept>
 #include <stdint.h>
 
+#include "cuda_macros.h"
+
 
 /* 
  * Return the bit nBit of val in first position. That is, the return
  * value of this function is either 0 or 1.
  */
-#ifdef __CUDA
-static inline __device__ uint32_t bit_device(uint32_t nBit, uint32_t val)
+static inline CUDA_BOTH uint32_t bit(int32_t nBit, uint32_t val)
 {
         return (val >> nBit) & 1;
 }
-#endif
-
-static inline uint32_t bit(uint32_t nBit, uint32_t val)
-{
-        return (val >> nBit) & 1;
-}
-
 
 class Function
 {
@@ -98,16 +92,21 @@ class Function_0_a_b_cd : public Function
 #ifdef __CUDA
                 __device__ uint32_t getCycleLength_device()
                 {
-                        int length = 0;
-                        m_curVal = 1;
+                        int32_t a = m_a;
+                        int32_t b = m_b;
+                        int32_t c = m_c;
+                        int32_t d = m_d;
+                        int32_t nVariables = m_nVariables;
+                        uint32_t length = 0;
+                        uint32_t curVal = 1;
                         do {
                                 uint32_t newBit =
-                                        bit_device(0, m_curVal) ^ bit_device(m_a, m_curVal) ^ bit_device(m_b, m_curVal) ^
-                                       (bit_device(m_c, m_curVal) & bit_device(m_d, m_curVal));
-                                m_curVal = (m_curVal >> 1) | (newBit << (m_nVariables - 1));
+                                        bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
+                                       (bit(c, curVal) & bit(d, curVal));
+                                curVal = (curVal >> 1) | (newBit << (nVariables - 1));
 
                                 length++;
-                        } while (m_curVal != 1); /* back to start value */
+                        } while (curVal != 1); /* back to start value */
 
                         return length;
                 }
@@ -159,16 +158,22 @@ class Function_0_a_bc_de : public Function
 #ifdef __CUDA
                 __device__ uint32_t getCycleLength_device()
                 {
-                        int length = 0;
-                        m_curVal = 1;
+                        int32_t a = m_a;
+                        int32_t b = m_b;
+                        int32_t c = m_c;
+                        int32_t d = m_d;
+                        int32_t e = m_e;
+                        int32_t nVariables = m_nVariables;
+                        uint32_t length = 0;
+                        uint32_t curVal = 1;
                         do {
-                                uint32_t newBit = bit_device(0, m_curVal) ^ bit_device(m_a, m_curVal) ^
-                                                 (bit_device(m_b, m_curVal) & bit_device(m_c, m_curVal)) ^
-                                                 (bit_device(m_d, m_curVal) & bit_device(m_e, m_curVal));
-                                m_curVal = (m_curVal >> 1) | (newBit << (m_nVariables - 1));
+                                uint32_t newBit = bit(0, curVal) ^ bit(a, curVal) ^
+                                                 (bit(b, curVal) & bit(c, curVal)) ^
+                                                 (bit(d, curVal) & bit(e, curVal));
+                                curVal = (curVal >> 1) | (newBit << (nVariables - 1));
 
                                 length++;
-                        } while (m_curVal != 1); /* back to start value */
+                        } while (curVal != 1); /* back to start value */
 
                         return length;
                 }
@@ -216,18 +221,25 @@ class Function_0_a_b_c_d_ef : public Function
 #ifdef __CUDA
                 __device__ uint32_t getCycleLength_device()
                 {
-                        int length = 0;
-                        m_curVal = 1;
+                        int32_t a = m_a;
+                        int32_t b = m_b;
+                        int32_t c = m_c;
+                        int32_t d = m_d;
+                        int32_t e = m_e;
+                        int32_t f = m_f;
+                        int32_t nVariables = m_nVariables;
+                        uint32_t length = 0;
+                        uint32_t curVal = 1;
                         do {
                                 uint32_t newBit =
-                                        bit_device(0, m_curVal) ^ bit_device(m_a, m_curVal) ^ bit_device(m_b, m_curVal) ^
-                                        bit_device(m_c, m_curVal) ^ bit_device(m_d, m_curVal) ^
-                                       (bit_device(m_e, m_curVal) & bit_device(m_f, m_curVal));
+                                        bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
+                                        bit(c, curVal) ^ bit(d, curVal) ^
+                                       (bit(e, curVal) & bit(f, curVal));
 
-                                m_curVal = (m_curVal >> 1) | (newBit << (m_nVariables - 1));
+                                curVal = (curVal >> 1) | (newBit << (nVariables - 1));
 
                                 length++;
-                        } while (m_curVal != 1); /* back to start value */
+                        } while (curVal != 1); /* back to start value */
 
                         return length;
                 }
@@ -280,17 +292,24 @@ class Function_0_a_b_cde : public Function
 #ifdef __CUDA
                 __device__ uint32_t getCycleLength_device()
                 {
-                        int length = 0;
-                        m_curVal = 1;
+                        /* Get on the stack what's on global memory */
+                        int32_t a = m_a;
+                        int32_t b = m_b;
+                        int32_t c = m_c;
+                        int32_t d = m_d;
+                        int32_t e = m_e;
+                        int32_t nVariables = m_nVariables;
+                        uint32_t length = 0;
+                        uint32_t curVal = 1;
                         do {
                                 uint32_t newBit =
-                                        bit_device(0, m_curVal) ^ bit_device(m_a, m_curVal) ^ bit_device(m_b, m_curVal) ^
-                                       (bit_device(m_c, m_curVal) & bit_device(m_d, m_curVal) & bit_device(m_e, m_curVal));
+                                        bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
+                                       (bit(c, curVal) & bit(d, curVal) & bit(e, curVal));
 
-                                m_curVal = (m_curVal >> 1) | (newBit << (m_nVariables - 1));
+                                curVal = (curVal >> 1) | (newBit << (nVariables - 1));
 
                                 length++;
-                        } while (m_curVal != 1); /* back to start value */
+                        } while (curVal != 1); /* back to start value */
 
                         return length;
                 }

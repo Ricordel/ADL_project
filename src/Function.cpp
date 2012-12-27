@@ -50,21 +50,7 @@ Function::~Function() {}
  ********************* Functions of the form x0 + a + b + c.d *********************
  **********************************************************************************/
 
-Function_0_a_b_cd::Function_0_a_b_cd()
-        : Function(0), m_a(0), m_b(0), m_c(0), m_d(0)
-{}
 
-
-Function_0_a_b_cd::Function_0_a_b_cd(Function_0_a_b_cd& other)
-        : Function(other.m_nVariables),
-          m_a(other.m_a), m_b(other.m_b), m_c(other.m_c), m_d(other.m_d)
-{}
-
-
-Function_0_a_b_cd::Function_0_a_b_cd(const Function_0_a_b_cd& other)
-        : Function(other.m_nVariables),
-          m_a(other.m_a), m_b(other.m_b), m_c(other.m_c), m_d(other.m_d)
-{}
 
 
 Function_0_a_b_cd::Function_0_a_b_cd(int32_t a, int32_t b, int32_t c, int32_t d, uint32_t nVariables)
@@ -105,6 +91,19 @@ Function_0_a_b_cd::Function_0_a_b_cd(const std::string& strRepr, uint32_t nVaria
 
 #endif /* ifndef WITHOUT_CPP11 */
 
+
+Function_0_a_b_cd::Function_0_a_b_cd()
+        : Function(0), m_a(0), m_b(0), m_c(0), m_d(0) {}
+
+Function_0_a_b_cd::Function_0_a_b_cd(Function_0_a_b_cd& other)
+        : Function(other.m_nVariables),
+          m_a(other.m_a), m_b(other.m_b), m_c(other.m_c), m_d(other.m_d)
+{}
+
+Function_0_a_b_cd::Function_0_a_b_cd(const Function_0_a_b_cd& other)
+        : Function(other.m_nVariables),
+          m_a(other.m_a), m_b(other.m_b), m_c(other.m_c), m_d(other.m_d)
+{}
 
 Function_0_a_b_cd::~Function_0_a_b_cd() {}
 

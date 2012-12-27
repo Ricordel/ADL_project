@@ -1,12 +1,12 @@
 CUDACC = nvcc
-CUDAFLAGS = -c -O0 -g
+CUDAFLAGS = -c -g
 
 # Compiler options
 ifndef WITHOUT_CPP11
-CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG -pedantic -fopenmp -std=c++11 -flto $(OPTFLAGS)
+CXXFLAGS = -c -O2 -Wall -Wextra -Isrc -DNDEBUG -pedantic -fopenmp -std=c++11 -flto $(OPTFLAGS)
 LDFLAGS = -lgomp -flto
 else
-CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG -pedantic -fopenmp -DWITHOUT_CPP11 $(OPTFLAGS)
+CXXFLAGS = -c -O2 -Wall -Wextra -Isrc -DNDEBUG -pedantic -fopenmp -DWITHOUT_CPP11 $(OPTFLAGS)
 LDFLAGS = -lgomp
 endif
 
@@ -44,6 +44,7 @@ all: $(ALL)
 find_functions_omp: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_omp.o $(OBJDIR)/find_functions.o
 	$(LD) $(LDFLAGS) $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_omp.o $(OBJDIR)/find_functions.o -o $@
 
+find_functions_cuda: CXXFLAGS += -D__CUDA
 find_functions_cuda: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_cuda.o $(OBJDIR)/find_functions.o
 	$(LD) $(LDFLAGS) -lcudart $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_cuda.o $(OBJDIR)/find_functions.o -o $@
 
@@ -59,7 +60,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cu
 
 # dev is all + debug options: -g, -O0, -DDEBUG
 #XXX I get weird errors of undefined operator= in basic_string when compiling in O0
-dev: CXXFLAGS = -c -O1 -g -Wall -Wextra -Isrc -pedantic $(OPTFLAGS)
+dev: CXXFLAGS = -c -O1 -g -Wall -Wextra -Isrc -std=c++11 -pedantic $(OPTFLAGS)
 dev: CPPFLAGS += -DDEBUG
 dev: all
 
@@ -70,7 +71,7 @@ depends: buildrepo
 
 
 clean:
-	rm -f find_functions print_function $(OBJDIR) -Rf
+	rm -f find_functions_omp find_functions_cuda print_function $(OBJDIR) -Rf
 
 
 tags:
