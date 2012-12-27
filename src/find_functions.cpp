@@ -131,8 +131,8 @@ void report_max_functions(uint32_t minNVariables, uint32_t maxNVariavles)
 
                 report_for_generator<FuncGenerator_0_a_b_cd>(nVariables);
                 report_for_generator<FuncGenerator_0_a_bc_de>(nVariables);
-                //report_for_generator<FuncGenerator_0_a_b_c_d_ef>(nVariables);
-                //report_for_generator<FuncGenerator_0_a_b_cde>(nVariables);
+                report_for_generator<FuncGenerator_0_a_b_c_d_ef>(nVariables);
+                report_for_generator<FuncGenerator_0_a_b_cde>(nVariables);
 
                 // Place other generators for other kinds of functions here
         }
