@@ -1,3 +1,5 @@
+BE_SURE_BIN_EXISTS:=$(shell mkdir -p bin)
+
 CUDACC = nvcc
 CUDAFLAGS = -c -g
 
@@ -12,24 +14,11 @@ endif
 
 LD = g++
 
-# Project name
 
 # Directories
-OBJDIR = bin
+BIN = bin
 SRCDIR = src
 
-
-# Files and folders
-SRCDIRS     = $(shell find $(SRCDIR) -type d | sed 's/$(SRCDIR)/./g' )
-CFILES      = $(shell find $(SRCDIR) -name '*.c')
-CPPFILES    = $(shell find $(SRCDIR) -name '*.cpp')
-OBJSFROMC   = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(CFILES))
-OBJSFROMCPP = $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(CPPFILES))
-OBJS        = $(OBJSFROMC) $(OBJSFROMCPP)
-DEPFILES    = $(patsubst %.o, %.d, $(OBJS))
-
-# Objs common to finder and function printer
-COMMON_OBJS = $(OBJDIR)/Function.o
 
 ifndef WITHOUT_CPP11
 ALL=find_functions_omp find_functions_cuda print_function
@@ -41,20 +30,20 @@ all: $(ALL)
 
 
 # Targets
-find_functions_omp: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_omp.o $(OBJDIR)/find_functions.o
-	$(LD) $(LDFLAGS) $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_omp.o $(OBJDIR)/find_functions.o -o $@
+find_functions_omp: $(BIN)/Function.o $(BIN)/FuncGenerator_omp.o $(BIN)/find_functions.o
+	$(LD) $(LDFLAGS) $^ -o $@
 
 find_functions_cuda: CXXFLAGS += -D__CUDA
-find_functions_cuda: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_cuda.o $(OBJDIR)/find_functions.o
-	$(LD) $(LDFLAGS) -lcudart $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_cuda.o $(OBJDIR)/find_functions.o -o $@
+find_functions_cuda: $(BIN)/Function.o $(BIN)/FuncGenerator_cuda.o $(BIN)/find_functions.o
+	$(LD) $(LDFLAGS) -lcudart $^ -o $@
 
-print_function: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/print_function.o
-	$(LD) $(LDFLAGS) $(COMMON_OBJS) $(OBJDIR)/print_function.o -o $@
+print_function: $(BIN)/Function.o $(BIN)/print_function.o
+	$(LD) $(LDFLAGS) $^ -o $@
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+$(BIN)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 	
-$(OBJDIR)/%.o: $(SRCDIR)/%.cu
+$(BIN)/%.o: $(SRCDIR)/%.cu
 	$(CUDACC) $(CUDAFLAGS) $< -o $@
 	
 
@@ -66,31 +55,12 @@ dev: all
 
 
 
-depends: buildrepo
-	@./scripts/make_depends.sh $(SRCDIR) $(OBJDIR)
-
-
 clean:
-	rm -f find_functions_omp find_functions_cuda print_function $(OBJDIR) -Rf
+	rm -f find_functions_omp find_functions_cuda print_function $(BIN)/*.o
 
 
 tags:
 	ctags -R
 
 
-.PHONY: clean depends buildrepo depends test tags
-	
-buildrepo:
-	@$(call make-repo)
-
-# Create obj directory structure
-define make-repo
-	mkdir -p $(OBJDIR)
-	for dir in $(SRCDIRS); \
-	do \
-		mkdir -p $(OBJDIR)/$$dir; \
-	done
-endef
-
-
--include $(DEPFILES)
+.PHONY: clean tags

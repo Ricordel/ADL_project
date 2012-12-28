@@ -70,6 +70,7 @@ void FuncGenerator_0_a_b_cd::reportMaxFunctions()
                 std::cerr << "a = " << a << std::endl;
                 
                 for (int32_t b = a + 1; b <= m_nVariables - 1; b++) {
+                        std::cerr << "\t b = " << b << std::endl;
 
                         for (int32_t c = 1; c <= m_nVariables - 2; c++) {
                                 for (int32_t d = c + 1; d <= m_nVariables - 1; d++) {
@@ -125,6 +126,7 @@ void FuncGenerator_0_a_bc_de::reportMaxFunctions()
                 std::cerr << "a = " << a << std::endl;
 
                 for (int32_t b = 1; b <= m_nVariables - 2; b++) {
+                        std::cerr << "\t b = " << b << std::endl;
                         for (int32_t c = b + 1; c <= m_nVariables - 1; c++) {
 
                                 for (int32_t d = b; d <= m_nVariables - 2; d++) {
@@ -170,6 +172,7 @@ void FuncGenerator_0_a_b_c_d_ef::reportMaxFunctions()
         for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
                 std::cerr << "a = " << a << std::endl;
                 for (int32_t b = a + 1; b <= m_nVariables - 3; b++) { /* -3 to leave room for c and d */
+                        std::cerr << "\t b = " << b << std::endl;
                         for (int32_t c = b + 1; c <= m_nVariables - 2; c++) { /* -2 to leave room for d */
                                 for (int32_t d = c + 1; d <= m_nVariables - 1; d++) {
 
@@ -221,6 +224,7 @@ void FuncGenerator_0_a_b_cde::reportMaxFunctions()
         for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
                 std::cerr << "a = " << a << std::endl;
                 for (int32_t b = a + 1; b <= m_nVariables - 1; b++) {
+                        std::cerr << "\t b = " << b << std::endl;
 
 
                         for (int32_t c = 1; c <= m_nVariables - 3; c++) { /* -3 to leave room for d and e */
