@@ -47,6 +47,8 @@ void getGPUProperties()
                                       sizeof(Function_0_a_b_cde))));
     GPUProps.actualConcurrentThreads = std::min(GPUProps.maxConcurrentThreads, (int) (maxMemory / maxFunctionSize));
 
+    std::cerr << "There can be at maximum " << GPUProps.actualConcurrentThreads << " concurrent threads" << std::endl;
+
     GPUProps.initialized = true;
 }
 
@@ -96,7 +98,6 @@ void getGPUProperties()
 
 
 
-
 template <class FunctionType>
 __global__ void kernel(FunctionType *d_funcArray, bool *d_isMaxLength, uint32_t nFunctions, uint32_t maxPossibleLength)
 {
@@ -137,6 +138,7 @@ static void sendAndReport(FunctionType *h_funcArray, FunctionType *d_funcArray,
 
     nThreadsPerBlock = (nBlocks == 1) ? enqueued : GPUProps.maxThreadsPerBlock;
 
+    std::cerr << "Launching kernel" << std::endl;
     // Launch kernel
     kernel<FunctionType> <<< nBlocks, nThreadsPerBlock >>> (d_funcArray, d_isMaxLength, enqueued, maxPossibleLength);
     
@@ -145,7 +147,7 @@ static void sendAndReport(FunctionType *h_funcArray, FunctionType *d_funcArray,
         throw std::runtime_error("Kernel execution failed: " + std::string(cudaGetErrorString(ret)));
     }
 
-    std::cerr << "Kernel has returned and memcpy is done" << std::endl;
+    std::cerr << "Kernel has returned successfully" << std::endl;
 
     for (int i = 0; i < enqueued; i++) {
         if (h_isMaxLength[i]) {
