@@ -12,7 +12,8 @@ CXXFLAGS = -c -O2 -Wall -Wextra -Isrc -DNDEBUG -pedantic -fopenmp -DWITHOUT_CPP1
 LDFLAGS = -lgomp
 endif
 
-LD = g++
+# link with the current g++ too
+LD = $(CXX)
 
 
 # Directories
