@@ -42,18 +42,8 @@ void cudaMemcpyWrapped(void *to, const void *from, size_t nmemb, enum cudaMemcpy
         cudaError_t ret;
         ret = cudaMemcpy(to, from, nmemb * sizeof(T), kind);
         if (ret != cudaSuccess) {
-                switch (kind) {
-                        case cudaMemcpyHostToDevice:
-                                throw CudaMemoryException("Memcpy from host to device failed");
-                        case cudaMemcpyDeviceToHost:
-                                throw CudaMemoryException("Memcpy from device to host failed");
-                        case cudaMemcpyDeviceToDevice:
-                                throw CudaMemoryException("Memcpy from device to device failed");
-                        case cudaMemcpyHostToHost:
-                                throw CudaMemoryException("Memcpy from host to host failed");
-                        default:
-                                throw CudaMemoryException("Memcpy: unknown kind");
-                }
+                throw CudaMemoryException("cudaMemcpy failed with message: " +
+                                           std::string(cudaGetErrorString(ret)));
         }
 }
 

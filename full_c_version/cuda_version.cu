@@ -9,7 +9,7 @@
 #include "dbg.h"
 
 
-#define FUNCS_PER_KERNEL 8192
+#define FUNCS_PER_KERNEL (1 << 16)
 
 
 
@@ -60,6 +60,10 @@ struct Function_0_a_b_cd {
     uint8_t c;
     uint8_t d;
     uint8_t nVariables;
+
+    uint32_t curVal;
+    uint32_t lengthSoFar;
+    bool done;
 };
 
 
@@ -95,7 +99,7 @@ bool canonical_0_a_b_cd(struct Function_0_a_b_cd& func)
 #define bit(nBit, val) (((val) >> (nBit)) & 1)
 
 
-__global__ void kernel_0_a_b_cd(struct Function_0_a_b_cd *d_funcArray, uint32_t *d_funcLength,
+__global__ void kernel_0_a_b_cd(struct Function_0_a_b_cd *d_funcArray,
                                 uint32_t nQueued, uint32_t maxPossibleLength)
 {
     // Get my position
@@ -109,8 +113,8 @@ __global__ void kernel_0_a_b_cd(struct Function_0_a_b_cd *d_funcArray, uint32_t 
         uint8_t d = d_funcArray[me].d;
         uint8_t nVariables = d_funcArray[me].nVariables;
 
-        uint32_t curVal = 1;
-        uint32_t length = 0;
+        uint32_t curVal = d_funcArray[me].curVal;
+        uint32_t length = d_funcArray[me].lengthSoFar;
         uint32_t newBit = 0;
 
         do {
@@ -121,50 +125,108 @@ __global__ void kernel_0_a_b_cd(struct Function_0_a_b_cd *d_funcArray, uint32_t 
             length++;
         } while (curVal != 1);
 
-        d_funcLength[me] = length;
+        d_funcArray[me].lengthSoFar = length;
+        d_funcArray[me].done = true;
     }
 }
 
 
 
 
-
-
-
-void sendAndReport_0_a_b_cd(struct Function_0_a_b_cd *h_funcArray, uint32_t *h_funcLength,
-                            struct Function_0_a_b_cd *d_funcArray, uint32_t *d_funcLength,
-                            uint32_t maxPossibleLength, uint32_t nQueued)
+__global__ void kernel_0_a_b_cd_filter_short(struct Function_0_a_b_cd *d_funcArray,
+                                             uint32_t nQueued, uint32_t maxPossibleLength)
 {
-    uint32_t nBlocks, nThreadsPerBlock;
+    // Get my position
+    uint32_t me = blockIdx.x * blockDim.x + threadIdx.x;
+    uint32_t end = maxPossibleLength >> 1;
 
-    /*log_info("Sending %u functions to device\n", nQueued);*/
+    if (me < nQueued) {
+        // Copy things into registers
+        uint8_t a = d_funcArray[me].a;
+        uint8_t b = d_funcArray[me].b;
+        uint8_t c = d_funcArray[me].c;
+        uint8_t d = d_funcArray[me].d;
+        uint8_t nVariables = d_funcArray[me].nVariables;
 
-    cudaMemcpyWrapped<Function_0_a_b_cd>(d_funcArray, h_funcArray, nQueued, cudaMemcpyHostToDevice);
+        uint32_t curVal = 1;
+        uint32_t length = 0;
+        uint32_t newBit = 0;
+
+        for (length = 0; length < end; length++) {
+            newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
+                    (bit(c, curVal) & bit(d, curVal));
+            curVal = (curVal >> 1) | (newBit << (nVariables - 1));
+
+            if (curVal == 1) {
+                break;
+            }
+        }
+
+        if (curVal == 1) { /* We are done */
+            d_funcArray[me].done = true;
+            d_funcArray[me].lengthSoFar = length;
+        } else { /* Some more to go */
+            d_funcArray[me].done = false;
+            d_funcArray[me].lengthSoFar = length;
+            d_funcArray[me].curVal = curVal;
+        }
+
+    }
+}
+
+
+
+
+void sendAndFilter_0_a_b_cd(std::vector<struct Function_0_a_b_cd>& h_funcArray,
+                            std::vector<struct Function_0_a_b_cd>& h_remainingFuncArray,
+                            CudaMallocWrapper<struct Function_0_a_b_cd>& d_funcArray,
+                            uint32_t maxPossibleLength)
+{
+    uint32_t nBlocks, nThreadsPerBlock, nQueued;
+    nQueued = h_funcArray.size();
+
+    cudaMemcpyWrapped<struct Function_0_a_b_cd>(d_funcArray.mem, &h_funcArray[0], nQueued, cudaMemcpyHostToDevice);
 
     nBlocks = nQueued / GPUProps.maxThreadsPerBlock + (nQueued % GPUProps.maxThreadsPerBlock == 0 ? 0 : 1);
-
     nThreadsPerBlock = (nBlocks == 1) ? nQueued : GPUProps.maxThreadsPerBlock;
 
-    /*log_info("Launching kernel");*/
+    kernel_0_a_b_cd_filter_short <<< nBlocks, nThreadsPerBlock >>>(d_funcArray.mem, nQueued, maxPossibleLength);
 
-    kernel_0_a_b_cd <<< nBlocks, nThreadsPerBlock >>> (d_funcArray, d_funcLength, nQueued, maxPossibleLength);
-
-    cudaMemcpyWrapped<uint32_t>(h_funcLength, d_funcLength, nQueued, cudaMemcpyDeviceToHost);
-
-    /*log_info("Kernel returned");*/
+    cudaMemcpyWrapped<struct Function_0_a_b_cd>(&h_funcArray[0], d_funcArray.mem, nQueued, cudaMemcpyDeviceToHost);
 
     for (int i = 0; i < nQueued; i++) {
-        std::cout << h_funcLength[i] << std::endl;
-#if 0
-        if (h_funcLength[i] == maxPossibleLength) {
+        if (!h_funcArray[i].done) {
+            h_remainingFuncArray.push_back(h_funcArray[i]);
+        }
+    }
+}
+
+
+
+
+void sendAndReport_0_a_b_cd(std::vector<struct Function_0_a_b_cd>& h_funcArray,
+                            CudaMallocWrapper<struct Function_0_a_b_cd>& d_funcArray,
+                            uint32_t maxPossibleLength)
+{
+    uint32_t nBlocks, nThreadsPerBlock, nQueued;
+    nQueued = h_funcArray.size();
+
+    cudaMemcpyWrapped<Function_0_a_b_cd>(d_funcArray.mem, &h_funcArray[0], nQueued, cudaMemcpyHostToDevice);
+
+    nBlocks = nQueued / GPUProps.maxThreadsPerBlock + (nQueued % GPUProps.maxThreadsPerBlock == 0 ? 0 : 1);
+    nThreadsPerBlock = (nBlocks == 1) ? nQueued : GPUProps.maxThreadsPerBlock;
+
+    kernel_0_a_b_cd <<< nBlocks, nThreadsPerBlock >>>(d_funcArray.mem, nQueued, maxPossibleLength);
+
+    cudaMemcpyWrapped<Function_0_a_b_cd>(&h_funcArray[0], d_funcArray.mem, nQueued, cudaMemcpyDeviceToHost);
+
+    for (int i = 0; i < nQueued; i++) {
+        if (h_funcArray[i].lengthSoFar == maxPossibleLength) {
             std::cout << "0," << (uint32_t)h_funcArray[i].a << "," << (uint32_t)h_funcArray[i].b
                       << ",(" << (uint32_t)h_funcArray[i].c << "," << (uint32_t)h_funcArray[i].d << ")"
                       << std::endl;
         }
-#endif
     }
-
-    std::cout << maxPossibleLength << std::endl;
 }
 
 
@@ -179,12 +241,10 @@ void report_0_a_b_cd(uint32_t nVariables)
     uint32_t maxPossibleLength = (1 << nVariables) - 1;
 
     std::vector<Function_0_a_b_cd> h_funcArray;
-    std::vector<uint32_t> h_funcLength(FUNCS_PER_KERNEL);
+    std::vector<Function_0_a_b_cd> h_remainingFuncArray;
 
     /* Allocate memory for arrays on device */
     CudaMallocWrapper<Function_0_a_b_cd> d_funcArray(FUNCS_PER_KERNEL);
-    CudaMallocWrapper<uint32_t> d_funcLength(FUNCS_PER_KERNEL);
-
 
     /* Generate the functions */
     for (int32_t a = 1; a <= (nVariables + 1) / 2; a++) {
@@ -194,18 +254,17 @@ void report_0_a_b_cd(uint32_t nVariables)
                 for (int32_t d = c + 1; d <= nVariables - 1; d++) {
 
                     // Keep the function for later evaluation
-                    struct Function_0_a_b_cd func = {a, b, c, d, nVariables};
+                    struct Function_0_a_b_cd func = {a, b, c, d, nVariables, 1, 0, false};
+
                     if (!canonical_0_a_b_cd(func)) {
                         continue;
                     }
 
+
                     h_funcArray.push_back(func);
 
                     if (h_funcArray.size() == FUNCS_PER_KERNEL) {
-                        // Warning with nvcc for taking adress of a stack variable, but no problem here
-                        sendAndReport_0_a_b_cd((struct Function_0_a_b_cd*)&h_funcArray[0], (uint32_t*)&h_funcLength[0],
-                                               (struct Function_0_a_b_cd*)d_funcArray.mem, (uint32_t*)d_funcLength.mem,
-                                                maxPossibleLength, h_funcArray.size());
+                        sendAndFilter_0_a_b_cd(h_funcArray, h_remainingFuncArray, d_funcArray, maxPossibleLength);
 
                         h_funcArray.clear();
                     }
@@ -215,10 +274,24 @@ void report_0_a_b_cd(uint32_t nVariables)
     }
 
     if (h_funcArray.size() != 0) {
-        sendAndReport_0_a_b_cd((struct Function_0_a_b_cd*)&h_funcArray[0], (uint32_t *)&h_funcLength[0],
-                               (struct Function_0_a_b_cd*)d_funcArray.mem, (uint32_t *)d_funcLength.mem,
-                                maxPossibleLength, h_funcArray.size());
+        sendAndFilter_0_a_b_cd(h_funcArray, h_remainingFuncArray, d_funcArray, maxPossibleLength);
     }
+
+
+    // Now that short functions have been filtered, send the rest to be finished
+    h_funcArray.clear();
+    for (int i = 0; i < h_remainingFuncArray.size(); i++) {
+        h_funcArray.push_back(h_remainingFuncArray[i]);
+        if (i == FUNCS_PER_KERNEL) {
+            sendAndReport_0_a_b_cd(h_funcArray, d_funcArray, maxPossibleLength);
+            h_funcArray.clear();
+        }
+    }
+
+    if (h_funcArray.size() != 0) {
+            sendAndReport_0_a_b_cd(h_funcArray, d_funcArray, maxPossibleLength);
+    }
+
 }
 
 

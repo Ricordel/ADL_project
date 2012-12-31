@@ -1,7 +1,7 @@
 BE_SURE_BIN_EXISTS:=$(shell mkdir -p bin)
 
 CUDACC = nvcc
-CUDAFLAGS = -c -g
+CUDAFLAGS = -c
 
 # Compiler options
 ifndef WITHOUT_CPP11
@@ -34,9 +34,17 @@ all: $(ALL)
 find_functions_omp: $(BIN)/Function.o $(BIN)/FuncGenerator_omp.o $(BIN)/find_functions.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
+<<<<<<< Updated upstream
 find_functions_cuda: CXXFLAGS += -D__CUDA
 find_functions_cuda: $(BIN)/Function.o $(BIN)/FuncGenerator_cuda.o $(BIN)/find_functions.o
 	$(LD) $(LDFLAGS) -lcudart $^ -o $@
+=======
+find_functions_cuda: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_cuda.o $(OBJDIR)/find_functions.o
+	$(LD) $(LDFLAGS) -lcudart $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_cuda.o $(OBJDIR)/find_functions.o -o $@
+#XXX test
+#find_functions_cuda: depends buildrepo $(SRCDIR)/FuncGenerator_cuda.cu $(SRCDIR)/Function.cpp $(SRCDIR)/find_functions.cpp
+	#$(CUDACC) $(SRCDIR)/FuncGenerator_cuda.cu $(SRCDIR)/Function.cpp $(SRCDIR)/find_functions.cpp -o $@
+>>>>>>> Stashed changes
 
 print_function: $(BIN)/Function.o $(BIN)/print_function.o
 	$(LD) $(LDFLAGS) $^ -o $@

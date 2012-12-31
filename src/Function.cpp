@@ -38,12 +38,6 @@ do { \
 #endif /* ifndef WITHOUT_CPP11 */
 
 
-Function::Function(uint32_t nVariables) : m_nVariables(nVariables) {}
-
-/* We need a virtual destructor, eventhough it does nothing */
-Function::~Function() {}
-
-
 
 
 /**********************************************************************************
@@ -56,6 +50,7 @@ Function::~Function() {}
 Function_0_a_b_cd::Function_0_a_b_cd(int32_t a, int32_t b, int32_t c, int32_t d, uint32_t nVariables)
         : Function(nVariables), m_a(a), m_b(b), m_c(c), m_d(d)
 {}
+
 
 
 #ifndef WITHOUT_CPP11
@@ -92,6 +87,7 @@ Function_0_a_b_cd::Function_0_a_b_cd(const std::string& strRepr, uint32_t nVaria
 #endif /* ifndef WITHOUT_CPP11 */
 
 
+<<<<<<< Updated upstream
 Function_0_a_b_cd::Function_0_a_b_cd()
         : Function(0), m_a(0), m_b(0), m_c(0), m_d(0) {}
 
@@ -109,6 +105,8 @@ Function_0_a_b_cd::~Function_0_a_b_cd() {}
 
 
 
+=======
+>>>>>>> Stashed changes
 
 std::string Function_0_a_b_cd::toString() const
 {
@@ -207,18 +205,6 @@ Function_0_a_bc_de::Function_0_a_bc_de()
 {}
 
 
-Function_0_a_bc_de::Function_0_a_bc_de(Function_0_a_bc_de& other)
-        : Function(other.m_nVariables),
-          m_a(other.m_a), m_b(other.m_b), m_c(other.m_c), m_d(other.m_d), m_e(other.m_e)
-{}
-
-
-Function_0_a_bc_de::Function_0_a_bc_de(const Function_0_a_bc_de& other)
-        : Function(other.m_nVariables),
-          m_a(other.m_a), m_b(other.m_b), m_c(other.m_c), m_d(other.m_d), m_e(other.m_e)
-{}
-
-
 Function_0_a_bc_de::Function_0_a_bc_de(int32_t a, int32_t b, int32_t c,
                                        int32_t d, int32_t e, uint32_t nVariables)
         : Function(nVariables), m_a(a), m_b(b), m_c(c), m_d(d), m_e(e)
@@ -272,8 +258,6 @@ Function_0_a_bc_de::Function_0_a_bc_de(const std::string& strRepr, uint32_t nVar
 
 #endif /* ifndef WITHOUT_CPP11 */
 
-
-Function_0_a_bc_de::~Function_0_a_bc_de() {}
 
 
 
@@ -386,10 +370,6 @@ Function_0_a_b_c_d_ef::Function_0_a_b_c_d_ef(int32_t a, int32_t b, int32_t c, in
                                              int32_t e, int32_t f, uint32_t nVariables)
         : Function(nVariables), m_a(a), m_b(b), m_c(c), m_d(d), m_e(e), m_f(f)
 {}
-
-
-Function_0_a_b_c_d_ef::~Function_0_a_b_c_d_ef() {}
-
 
 
 
@@ -513,10 +493,6 @@ Function_0_a_b_cde::Function_0_a_b_cde(int32_t a, int32_t b, int32_t c,
                                        int32_t d, int32_t e, uint32_t nVariables)
         : Function(nVariables), m_a(a), m_b(b), m_c(c), m_d(d), m_e(e)
 {}
-
-
-Function_0_a_b_cde::~Function_0_a_b_cde() {}
-
 
 
 
