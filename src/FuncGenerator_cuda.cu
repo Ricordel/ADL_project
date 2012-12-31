@@ -47,6 +47,10 @@ void getGPUProperties()
                                       sizeof(Function_0_a_b_cde))));
     GPUProps.actualConcurrentThreads = std::min(GPUProps.maxConcurrentThreads, (int) (maxMemory / maxFunctionSize));
 
+    //XXX beaucoup moins, pour le suivi, et encore moins pour améliorer les chances
+    // de pouvoir avorter vite sur les fonctions courtes.
+    GPUProps.actualConcurrentThreads = 1 << 12;
+
     std::cerr << "There can be at maximum " << GPUProps.actualConcurrentThreads << " concurrent threads" << std::endl;
 
     GPUProps.initialized = true;

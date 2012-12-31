@@ -17,7 +17,7 @@
  * Returns maximum cycle-length functions for different forms and
  * different number of variables.
  */
-void report_max_functions(uint32_t minNVariables, uint32_t maxNVariavles);
+void report_max_functions(uint32_t minNVariables, uint32_t maxNVariables);
 
 
 /*
@@ -38,7 +38,8 @@ void report_max_functions_for_generator(FuncGenerator& generator);
 static const struct option longOpts[] = {
         {"from", required_argument, NULL, 'f'},
         {"to", required_argument, NULL, 't'},
-        {"n-vars", required_argument, NULL, 'n'}
+        {"n-vars", required_argument, NULL, 'n'},
+        {"func-kind", required_argument, NULL, 'k'}
 };
 
 const char *shortOpts = "ft";
@@ -46,6 +47,7 @@ const char *shortOpts = "ft";
 struct {
         uint32_t from;
         uint32_t to;
+        std::string funcKind;
 } globalOptions;
 
 
@@ -53,6 +55,7 @@ int main(int argc, char *argv[])
 {
         globalOptions.from = 0;
         globalOptions.to   = 0;
+        globalOptions.funcKind = "all";
 
         int longIndex; /* unused, but necessary for getopt */
 
@@ -67,6 +70,8 @@ int main(int argc, char *argv[])
                         case 'n': globalOptions.from = std::stoi(std::string(optarg));
                                   globalOptions.to = std::stoi(std::string(optarg));
                                   break;
+                        case 'k': globalOptions.funcKind = std::string(optarg);
+                                  break;
 #else
                         case 'f': globalOptions.from = atoi(optarg);
                                   break;
@@ -74,6 +79,8 @@ int main(int argc, char *argv[])
                                   break;
                         case 'n': globalOptions.from = atoi(optarg);
                                   globalOptions.to = atoi(optarg);
+                                  break;
+                        case 'k': globalOptions.funcKind = std::string(optarg);
                                   break;
 #endif
                         default:
@@ -120,21 +127,28 @@ template <class FuncGenerator> void report_for_generator(uint32_t nVariables)
 
 
 
-void report_max_functions(uint32_t minNVariables, uint32_t maxNVariavles)
+void report_max_functions(uint32_t minNVariables, uint32_t maxNVariables)
 {
 
-        for (uint32_t nVariables = minNVariables; nVariables <= maxNVariavles; nVariables++) {
+        for (uint32_t nVariables = minNVariables; nVariables <= maxNVariables; nVariables++) {
 
                 std::cerr << std::endl
                           << "========= Testing for " << nVariables << " variables =========="
                           << std::endl;
 
-                report_for_generator<FuncGenerator_0_a_b_cd>(nVariables);
-                report_for_generator<FuncGenerator_0_a_bc_de>(nVariables);
-                report_for_generator<FuncGenerator_0_a_b_c_d_ef>(nVariables);
-                report_for_generator<FuncGenerator_0_a_b_cde>(nVariables);
+                if (globalOptions.funcKind == "all" || globalOptions.funcKind == "0_a_b_cd") {
+                        report_for_generator<FuncGenerator_0_a_b_cd>(nVariables);
+                }
+                if (globalOptions.funcKind == "all" || globalOptions.funcKind == "0_a_bc_de") {
+                        report_for_generator<FuncGenerator_0_a_bc_de>(nVariables);
+                }
+                if (globalOptions.funcKind == "all" || globalOptions.funcKind == "0_a_b_c_d_ef") {
+                        report_for_generator<FuncGenerator_0_a_b_c_d_ef>(nVariables);
+                }
+                if (globalOptions.funcKind == "all" || globalOptions.funcKind == "0_a_b_cde") {
+                        report_for_generator<FuncGenerator_0_a_b_cde>(nVariables);
+                }
 
                 // Place other generators for other kinds of functions here
         }
-
 }

@@ -5,15 +5,15 @@ CUDAFLAGS = -c -g
 
 # Compiler options
 ifndef WITHOUT_CPP11
-CXXFLAGS = -c -O2 -Wall -Wextra -Isrc -DNDEBUG -pedantic -fopenmp -std=c++11 -flto $(OPTFLAGS)
+CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG -pedantic -fopenmp -std=c++11 -flto $(OPTFLAGS)
 LDFLAGS = -lgomp -flto
 else
-CXXFLAGS = -c -O2 -Wall -Wextra -Isrc -DNDEBUG -pedantic -fopenmp -DWITHOUT_CPP11 $(OPTFLAGS)
+CXXFLAGS = -c -O3 -Wall -Wextra -Isrc -DNDEBUG -pedantic -fopenmp -DWITHOUT_CPP11 $(OPTFLAGS)
 LDFLAGS = -lgomp
 endif
 
 # link with the current g++ too
-LD = $(CXX)
+LD = g++
 
 
 # Directories
