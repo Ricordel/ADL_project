@@ -120,6 +120,7 @@ __global__ void kernel_0_a_b_cd(struct Function_0_a_b_cd *d_funcArray,
         do {
             newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
                     (bit(c, curVal) & bit(d, curVal));
+            newBit &= 0x1;
             curVal = (curVal >> 1) | (newBit << (nVariables - 1));
 
             length++;
@@ -155,12 +156,14 @@ __global__ void kernel_0_a_b_cd_filter(struct Function_0_a_b_cd *d_funcArray,
         // Unroll the first iteration to put curVal != 1 in the for condition
         newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
                 (bit(c, curVal) & bit(d, curVal));
+        newBit &= 0x1;
         curVal = (curVal >> 1) | (newBit << (nVariables - 1));
         length++;
 
         for (/* done */; curVal != 1 && length < filterValue; length++) {
             newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
                     (bit(c, curVal) & bit(d, curVal));
+            newBit &= 0x1;
             curVal = (curVal >> 1) | (newBit << (nVariables - 1));
         }
 

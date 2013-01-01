@@ -1,13 +1,18 @@
 #include <stdexcept>
 #include <vector>
 #include <iostream>
+#include <cstdlib>
 
 #include <stdint.h>
 
-#include "dbg.h"
-
 
 #define FUNCS_PER_KERNEL (1 << 20)
+
+
+#define bit(nBit, val) (((val) >> (nBit)) & 0x1)
+
+
+template <typename T> void report(uint8_t nVariables);
 
 
 
@@ -18,102 +23,91 @@
 
 class Function_0_a_b_cd {
         public:
-                uint8_t a;
-                uint8_t b;
-                uint8_t c;
-                uint8_t d;
+                // No constructor, it seems to be less efficient than initialazing with 
+                // a braces struct, while the same stuff is to be done.
+                uint8_t a, b, c, d;
                 uint8_t nVariables;
+
+                bool smaller_or_equal(const Function_0_a_b_cd& other) const
+                {
+                        if (a < other.a)
+                                return true;
+
+                        if (a == other.a && b < other.b)
+                                return true;
+
+                        if (a == other.a && b == other.b && c < other.c)
+                                return true;
+
+                        if (a == other.a && b == other.b && c == other.c && d <= other.d)
+                                return true;
+
+                        return false;
+                }
+
+
+                bool is_canonical() const
+                {
+                        uint8_t ar = nVariables - a;
+                        uint8_t br = nVariables - b;
+                        uint8_t cr = nVariables - c;
+                        uint8_t dr = nVariables - d;
+
+                        Function_0_a_b_cd other = {br, ar, dr, cr, nVariables};
+                        return smaller_or_equal(other);
+                }
+
+
+                uint32_t cycle_length()
+                {
+                        uint32_t length = 0;
+                        uint32_t newBit;
+                        uint32_t curVal = 1;
+
+                        do {
+                                newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
+                                        (bit(c, curVal) & bit(d, curVal));
+                                curVal = (curVal >> 1) | (newBit << (nVariables - 1));
+
+                                length++;
+                        } while (curVal != 1);
+
+                        return length;
+                }
+
+                void print() const
+                {
+                        std::cout << (uint32_t) nVariables << " variables: "
+                                  << "0," << (uint32_t) a << "," << (uint32_t) b
+                                  << ",(" << (uint32_t) c << "," << (uint32_t) d
+                                  << ")" << std::endl;
+                }
 };
 
 
-bool smaller_or_equal_0_a_b_cd( Function_0_a_b_cd& one,  Function_0_a_b_cd& other)
+
+template <>
+void report<Function_0_a_b_cd>(uint8_t nVariables)
 {
-        if (one.a < other.a)
-                return true;
-
-        if (one.a == other.a && one.b < other.b)
-                return true;
-
-        if (one.a == other.a && one.b == other.b && one.c < other.c)
-                return true;
-
-        if (one.a == other.a && one.b == other.b && one.c == other.c && one.d <= other.d)
-                return true;
-
-        return false;
-}
-
-bool canonical_0_a_b_cd( Function_0_a_b_cd& func)
-{
-        uint8_t ar = func.nVariables - func.a;
-        uint8_t br = func.nVariables - func.b;
-        uint8_t cr = func.nVariables - func.c;
-        uint8_t dr = func.nVariables - func.d;
-
-         Function_0_a_b_cd other = {br, ar, dr, cr, func.nVariables};
-        return smaller_or_equal_0_a_b_cd(func, other);
-}
-
-
-#define bit(nBit, val) (((val) >> (nBit)) & 1)
-
-
-
-
-uint32_t cycle_length_0_a_b_cd(const Function_0_a_b_cd& func)
-{
-        uint32_t length = 0;
-        uint32_t newBit;
-        uint32_t curVal = 1;
-
-        do {
-            newBit = bit(0, curVal) ^ bit(func.a, curVal) ^ bit(func.b, curVal) ^
-                    (bit(func.c, curVal) & bit(func.d, curVal));
-            curVal = (curVal >> 1) | (newBit << (func.nVariables - 1));
-
-            length++;
-        } while (curVal != 1);
-
-        return length;
-}
-
-void print_function_0_a_b_cd( Function_0_a_b_cd& func)
-{
-#pragma omp cricital
-        {
-        std::cout << "0," << (uint32_t) func.a << "," << (uint32_t) func.b
-                  << ",(" << (uint32_t) func.c << "," << (uint32_t) func.d << ")"
-                  << std::endl;
-        }
-}
-
-
-
-
-
-/************************************ Functions generation **************************************/
-void report_0_a_b_cd(uint32_t nVariables)
-{
-        //XXX Carefull with nVariables 32.
-        uint32_t maxPossibleLength = (1 << nVariables) - 1;
+        uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
 
         /* Generate the functions */
-        for (uint32_t a = 1; a <= (nVariables + 1) / 2; a++) {
-                for (uint32_t b = a + 1; b <= nVariables - 1; b++) {
+        for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
+                for (uint8_t b = a + 1; b <= nVariables - 1; b++) {
 
-                        for (uint32_t c = 1; c <= nVariables - 2; c++) {
-                                for (uint32_t d = c + 1; d <= nVariables - 1; d++) {
+                        for (uint8_t c = 1; c <= nVariables - 2; c++) {
+                                for (uint8_t d = c + 1; d <= nVariables - 1; d++) {
 
                                         // Keep the function for later evaluation
-                                         Function_0_a_b_cd func = {a, b, c, d, nVariables, 1, 0, false};
+                                        Function_0_a_b_cd func = {a, b, c, d, nVariables};
 
-
-                                        #pragma omp task
+                                        //#pragma omp task
                                         {
-                                                if (canonical_0_a_b_cd(func)) {
-                                                        uint32_t length = cycle_length_0_a_b_cd(func);
+                                                if (func.is_canonical()) {
+                                                        uint32_t length = func.cycle_length();
                                                         if (length == maxPossibleLength) {
-                                                                print_function_0_a_b_cd(func);
+                                                        #pragma omp critical
+                                                                func.print();
                                                         }
                                                 }
                                         }
@@ -122,6 +116,255 @@ void report_0_a_b_cd(uint32_t nVariables)
                 }
         }
 
+//#pragma omp taskwait
+}
+
+
+
+
+
+
+/**********************************************************************************************
+ ********************************* Form x0 + a + bc + de ***************************************
+ **********************************************************************************************/
+
+
+class Function_0_a_bc_de {
+        public:
+                // No constructor, it seems to be less efficient than initialazing with 
+                // a braces struct, while the same stuff is to be done.
+                uint8_t a, b, c, d, e;
+                uint8_t nVariables;
+
+                bool smaller_or_equal(const Function_0_a_bc_de& other) const
+                {
+                        if (a < other.a)
+                                return true;
+
+                        if (a == other.a && b < other.b)
+                                return true;
+
+                        if (a == other.a && b == other.b && c < other.c)
+                                return true;
+
+                        if (a == other.a && b == other.b && c == other.c && d < other.d)
+                                return true;
+
+                        if (a == other.a && b == other.b && c == other.c && d == other.d && e <= other.e)
+                                return true;
+
+                        return false;
+                }
+
+
+                bool is_canonical() const
+                {
+                        int8_t ar = nVariables - a;
+                        int8_t br = nVariables - b;
+                        int8_t cr = nVariables - c;
+                        int8_t dr = nVariables - d;
+                        int8_t er = nVariables - e;
+
+                        if (b == d && c == e) {
+                                return false;
+                        }
+
+                        Function_0_a_bc_de f1 = {ar, er, dr, cr, br, nVariables};
+                        Function_0_a_bc_de f2 = {ar, cr, br, er, dr, nVariables};
+                        Function_0_a_bc_de f3 = {a, d, e, b, c, nVariables};
+
+                        return (smaller_or_equal(f1) && smaller_or_equal(f2) && smaller_or_equal(f3));
+                }
+
+
+                uint32_t cycle_length()
+                {
+                        uint32_t length = 0;
+                        uint32_t newBit;
+                        uint32_t curVal = 1;
+
+                        do {
+                                //XXX essayer d'inliner newBit, pour voir... Mais a priori, un 
+                                //XXX compilateur est assez bon pour faire ça tout seul.
+                                newBit = bit(0, curVal) ^ bit(a, curVal) ^
+                                        (bit(b, curVal) & bit(c, curVal)) ^
+                                        (bit(d, curVal) & bit(e, curVal));
+                                curVal = (curVal >> 1) | (newBit << (nVariables - 1));
+
+                                length++;
+                        } while (curVal != 1);
+
+                        return length;
+                }
+
+
+                void print() const
+                {
+                        std::cout << (uint32_t) nVariables << " variables: "
+                                  << 0 << "," << (uint32_t) a  << ",(" << (uint32_t) b << "," << (uint32_t) c << "),("
+                                  << (uint32_t) d << "," << (uint32_t) e << ")" << std::endl;
+                }
+};
+
+
+
+template <>
+void report<Function_0_a_bc_de>(uint8_t nVariables)
+{
+        uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
+
+        /* Generate the functions */
+        for (int32_t a = 1; a <= (nVariables + 1) / 2; a++) {
+
+                for (int32_t b = 1; b <= nVariables - 2; b++) {
+                        for (int32_t c = b + 1; c <= nVariables - 1; c++) {
+
+                                for (int32_t d = b; d <= nVariables - 2; d++) {
+                                        for (int32_t e = d + 1; e <= nVariables - 1; e++) {
+
+                                                // Keep the function for later evaluation
+                                                Function_0_a_bc_de func = {a, b, c, d, e, nVariables};
+
+                                                #pragma omp task
+                                                {
+                                                        if (func.is_canonical()) {
+                                                                uint32_t length = func.cycle_length();
+                                                                if (length == maxPossibleLength) {
+                                                                #pragma omp critical
+                                                                        func.print();
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                }
+                        }
+                }
+
+        }
+#pragma omp taskwait
+}
+
+
+
+
+
+
+/**********************************************************************************************
+ ***************************** Form x0 + a + b + c + d + ef ***********************************
+ **********************************************************************************************/
+
+
+class Function_0_a_b_c_d_ef {
+        public:
+                // No constructor, it seems to be less efficient than initialazing with 
+                // a braces struct, while the same stuff is to be done.
+                uint8_t a, b, c, d, e, f;
+                uint8_t nVariables;
+
+                bool smaller_or_equal(const Function_0_a_b_c_d_ef& other) const
+                {
+                        if (a < other.a)
+                                return true;
+
+                        if (a == other.a && b < other.b)
+                                return true;
+
+                        if (a == other.a && b == other.b && c < other.c)
+                                return true;
+
+                        if (a == other.a && b == other.b && c == other.c && d < other.d)
+                                return true;
+
+                        if (a == other.a && b == other.b && c == other.c && d == other.d && e < other.e)
+                                return true;
+
+                        if (a == other.a && b == other.b && c == other.c && d == other.d && e == other.e && f == other.f)
+                                return true;
+
+                        return false;
+                }
+
+
+                bool is_canonical() const
+                {
+                        int8_t ar = nVariables - a;
+                        int8_t br = nVariables - b;
+                        int8_t cr = nVariables - c;
+                        int8_t dr = nVariables - d;
+                        int8_t er = nVariables - e;
+                        int8_t fr = nVariables - f;
+
+                        Function_0_a_b_c_d_ef other = {dr, cr, br, ar, fr, er, nVariables};
+
+                        return smaller_or_equal(other);
+                }
+
+
+                uint32_t cycle_length()
+                {
+                        uint32_t length = 0;
+                        uint32_t newBit;
+                        uint32_t curVal = 1;
+
+                        do {
+                                newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
+                                         bit(c, curVal) ^ bit(d, curVal) ^
+                                        (bit(e, curVal) & bit(f, curVal));
+
+                                curVal = (curVal >> 1) | (newBit << (nVariables - 1));
+
+                                length++;
+                        } while (curVal != 1);
+
+                        return length;
+                }
+
+
+                void print() const
+                {
+                        std::cout << (uint32_t) nVariables << " variables: "
+                                  << 0 << "," << (uint32_t) a  << "," << (uint32_t) b << ","
+                                  << (uint32_t) c << "," << (uint32_t) d << ",(" << (uint32_t) e << "," << (uint32_t) f << ")"
+                                  << std::endl;
+                }
+
+};
+
+
+
+template <>
+void report<Function_0_a_b_c_d_ef>(uint8_t nVariables)
+{
+        uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
+
+        /* Generate the functions */
+        for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
+                for (uint8_t b = a + 1; b <= nVariables - 3; b++) { /* -3 to leave room for c and d */
+                        for (uint8_t c = b + 1; c <= nVariables - 2; c++) { /* -2 to leave room for d */
+                                for (uint8_t d = c + 1; d <= nVariables - 1; d++) {
+
+                                        for (uint8_t e = 1; e <= nVariables - 2; e++) {
+                                                for (uint8_t f = e + 1; f <= nVariables - 1; f++) {
+
+                                                        // Keep the function for later evaluation
+                                                        Function_0_a_b_c_d_ef func = {a, b, c, d, e, f, nVariables};
+        
+                                                        #pragma omp task
+                                                        {
+                                                                if (func.is_canonical()) {
+                                                                        uint32_t length = func.cycle_length();
+                                                                        if (length == maxPossibleLength) {
+                                                                        #pragma omp critical
+                                                                                func.print();
+                                                                        }
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                }
+                        }
+                }
+        }
 #pragma omp taskwait
 }
 
@@ -131,88 +374,123 @@ void report_0_a_b_cd(uint32_t nVariables)
 
 
 
+/**********************************************************************************************
+ ***ù***************************** Form x0 + a + b + cde **************************************
+ **********************************************************************************************/
+
+
+class Function_0_a_b_cde {
+        public:
+                // No constructor, it seems to be less efficient than initialazing with 
+                // a braces struct, while the same stuff is to be done.
+                uint8_t a, b, c, d, e;
+                uint8_t nVariables;
+
+                bool smaller_or_equal(const Function_0_a_b_cde& other) const
+                {
+                        if (a < other.a)
+                                return true;
+
+                        if (a == other.a && b < other.b)
+                                return true;
+
+                        if (a == other.a && b == other.b && c < other.c)
+                                return true;
+
+                        if (a == other.a && b == other.b && c == other.c && d < other.d)
+                                return true;
+
+                        if (a == other.a && b == other.b && c == other.c && d == other.d && e <= other.e)
+                                return true;
+
+                        return false;
+                }
+
+
+                bool is_canonical() const
+                {
+                        int32_t ar = nVariables - a;
+                        int32_t br = nVariables - b;
+                        int32_t cr = nVariables - c;
+                        int32_t dr = nVariables - d;
+                        int32_t er = nVariables - e;
+
+                        Function_0_a_b_cde other = {br, ar, er, dr, cr, nVariables};
+                        return smaller_or_equal(other);
+                }
+
+
+                uint32_t cycle_length()
+                {
+                        uint32_t length = 0;
+                        uint32_t newBit;
+                        uint32_t curVal = 1;
+
+                        do {
+                                newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
+                                        (bit(c, curVal) & bit(d, curVal) & bit(e, curVal));
+
+                                curVal = (curVal >> 1) | (newBit << (nVariables - 1));
+
+                                length++;
+                        } while (curVal != 1);
+
+                        return length;
+                }
+
+
+                void print() const
+                {
+                        std::cout << (uint32_t) nVariables << " variables: "
+                                  << 0 << "," << (uint32_t) a  << "," << (uint32_t) b
+                                  << ",(" << (uint32_t) c << "," << (uint32_t) d << "," << (uint32_t) e << ")"
+                                  << std::endl;
+                }
+};
+
+
+
+template <>
+void report<Function_0_a_b_cde>(uint8_t nVariables)
+{
+        uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
+
+        /* Generate the functions */
+        for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
+                for (uint8_t b = a + 1; b <= nVariables - 1; b++) {
+
+
+                        for (uint8_t c = 1; c <= nVariables - 3; c++) { /* -3 to leave room for d and e */
+                                for (uint8_t d = c + 1; d <= nVariables - 2; d++) {
+                                        for (uint8_t e = d + 1; e <= nVariables - 1; e++) {
+
+                                                // Keep the function for later evaluation
+                                                Function_0_a_b_cde func = {a, b, c, d, e, nVariables};
+
+                                                #pragma omp task
+                                                {
+                                                        if (func.is_canonical()) {
+                                                                uint32_t length = func.cycle_length();
+                                                                if (length == maxPossibleLength) {
+                                                                #pragma omp critical
+                                                                        func.print();
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                }
+                        }
+                }
+        }
+#pragma omp taskwait
+}
+
+
+
+
+
+
 #if 0
-
-
-
-
-
-
-        template <class FunctionType>
-                __global__ void kernel(FunctionType *d_funcArray, bool *d_isMaxLength, uint32_t nFunctions, uint32_t maxPossibleLength)
-                {
-                        // Get my position in the grid
-                        uint32_t me = blockIdx.x * blockDim.x + threadIdx.x;
-
-                        if (me < nFunctions) {
-                                if (d_funcArray[me].getCycleLength_device() == maxPossibleLength) {
-                                        d_isMaxLength[me] = true;
-                                } else {
-                                        d_isMaxLength[me] = false;
-                                }
-                        }
-
-                }
-
-
-
-
-
-
-
-        template <class FunctionType>
-                static void sendAndReport(FunctionType *h_funcArray, FunctionType *d_funcArray,
-                                bool *h_isMaxLength, bool *d_isMaxLength, uint32_t enqueued, uint32_t maxPossibleLength)
-                {
-                        cudaError_t ret;
-                        uint32_t nBlocks, nThreadsPerBlock;
-
-                        std::cerr << "Sending " << enqueued << " functions to device" << std::endl;
-
-                        ret = cudaMemcpy(d_funcArray, h_funcArray, enqueued * sizeof(FunctionType), cudaMemcpyHostToDevice);
-                        if (ret != cudaSuccess) {
-                                throw std::runtime_error("Failed to memcpy to device: " + std::string(cudaGetErrorString(ret)));
-                        }
-
-                        nBlocks = enqueued / GPUProps.maxThreadsPerBlock + (enqueued % GPUProps.maxThreadsPerBlock == 0 ? 0 : 1);
-
-                        nThreadsPerBlock = (nBlocks == 1) ? enqueued : GPUProps.maxThreadsPerBlock;
-
-                        std::cerr << "Launching kernel" << std::endl;
-                        // Launch kernel
-                        kernel<FunctionType> <<< nBlocks, nThreadsPerBlock >>> (d_funcArray, d_isMaxLength, enqueued, maxPossibleLength);
-
-                        ret = cudaMemcpy(h_isMaxLength, d_isMaxLength, enqueued * sizeof(bool), cudaMemcpyDeviceToHost);
-                        if (ret != cudaSuccess) {
-                                throw std::runtime_error("Kernel execution failed: " + std::string(cudaGetErrorString(ret)));
-                        }
-
-                        std::cerr << "Kernel has returned successfully" << std::endl;
-
-                        for (int i = 0; i < enqueued; i++) {
-                                if (h_isMaxLength[i]) {
-                                        std::cout << h_funcArray[i].toString() << std::endl;
-                                }
-                        }
-                }
-
-
-
-
-        /***********************************************************************
-         ********************* For x0 + xa + xb + xc.xd ************************
-         ***********************************************************************/
-
-        FuncGenerator_0_a_b_cd::FuncGenerator_0_a_b_cd(uint32_t nVariables)
-                : m_nVariables(nVariables), m_maxPossibleLength((1 << nVariables) - 1)
-        {}
-
-        FuncGenerator_0_a_b_cd::~FuncGenerator_0_a_b_cd() {}
-
-
-
-
-
 
 
         /***********************************************************************
@@ -220,7 +498,7 @@ void report_0_a_b_cd(uint32_t nVariables)
          ***********************************************************************/
 
         FuncGenerator_0_a_bc_de::FuncGenerator_0_a_bc_de(uint32_t nVariables)
-                : m_nVariables(nVariables), m_maxPossibleLength((1 << m_nVariables) - 1)
+                : nVariables(nVariables), maxPossibleLength((1 << nVariables) - 1)
         {}
 
         FuncGenerator_0_a_bc_de::~FuncGenerator_0_a_bc_de() {}
@@ -265,16 +543,16 @@ void report_0_a_b_cd(uint32_t nVariables)
 
                 uint32_t enqueued = 0;
 
-                for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
+                for (int32_t a = 1; a <= (nVariables + 1) / 2; a++) {
 
-                        for (int32_t b = 1; b <= m_nVariables - 2; b++) {
-                                for (int32_t c = b + 1; c <= m_nVariables - 1; c++) {
+                        for (int32_t b = 1; b <= nVariables - 2; b++) {
+                                for (int32_t c = b + 1; c <= nVariables - 1; c++) {
 
-                                        for (int32_t d = b; d <= m_nVariables - 2; d++) {
-                                                for (int32_t e = d + 1; e <= m_nVariables - 1; e++) {
+                                        for (int32_t d = b; d <= nVariables - 2; d++) {
+                                                for (int32_t e = d + 1; e <= nVariables - 1; e++) {
 
                                                         // Keep the function for later evaluation
-                                                        Function_0_a_bc_de func(a, b, c, d, e, m_nVariables);
+                                                        Function_0_a_bc_de func(a, b, c, d, e, nVariables);
                                                         if (!func.isCanonicalForm()) {
                                                                 continue;
                                                         }
@@ -283,7 +561,7 @@ void report_0_a_b_cd(uint32_t nVariables)
 
                                                         if (enqueued == GPUProps.actualConcurrentThreads) {
                                                                 sendAndReport<Function_0_a_bc_de>(h_funcArray, d_funcArray, h_isMaxLength,
-                                                                                d_isMaxLength, enqueued, m_maxPossibleLength);
+                                                                                d_isMaxLength, enqueued, maxPossibleLength);
                                                                 enqueued = 0;
                                                         }
                                                 }
@@ -294,7 +572,7 @@ void report_0_a_b_cd(uint32_t nVariables)
 
                 if (enqueued != 0) {
                         sendAndReport<Function_0_a_bc_de>(h_funcArray, d_funcArray, h_isMaxLength,
-                                        d_isMaxLength, enqueued, m_maxPossibleLength);
+                                        d_isMaxLength, enqueued, maxPossibleLength);
                 }
 
                 cudaFree(d_funcArray);
@@ -311,7 +589,7 @@ void report_0_a_b_cd(uint32_t nVariables)
          ***********************************************************************/
 
         FuncGenerator_0_a_b_c_d_ef::FuncGenerator_0_a_b_c_d_ef(uint32_t nVariables)
-                : m_nVariables(nVariables), m_maxPossibleLength((1 << m_nVariables) - 1)
+                : nVariables(nVariables), maxPossibleLength((1 << nVariables) - 1)
         {}
 
 
@@ -345,16 +623,16 @@ void report_0_a_b_cd(uint32_t nVariables)
 
                 uint32_t enqueued = 0;
 
-                for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
-                        for (int32_t b = a + 1; b <= m_nVariables - 3; b++) { /* -3 to leave room for c and d */
-                                for (int32_t c = b + 1; c <= m_nVariables - 2; c++) { /* -2 to leave room for d */
-                                        for (int32_t d = c + 1; d <= m_nVariables - 1; d++) {
+                for (int32_t a = 1; a <= (nVariables + 1) / 2; a++) {
+                        for (int32_t b = a + 1; b <= nVariables - 3; b++) { /* -3 to leave room for c and d */
+                                for (int32_t c = b + 1; c <= nVariables - 2; c++) { /* -2 to leave room for d */
+                                        for (int32_t d = c + 1; d <= nVariables - 1; d++) {
 
-                                                for (int32_t e = 1; e <= m_nVariables - 2; e++) {
-                                                        for (int32_t f = e + 1; f <= m_nVariables - 1; f++) {
+                                                for (int32_t e = 1; e <= nVariables - 2; e++) {
+                                                        for (int32_t f = e + 1; f <= nVariables - 1; f++) {
 
                                                                 // Keep the function for later evaluation
-                                                                Function_0_a_b_c_d_ef func(a, b, c, d, e, f, m_nVariables);
+                                                                Function_0_a_b_c_d_ef func(a, b, c, d, e, f, nVariables);
                                                                 if (!func.isCanonicalForm()) {
                                                                         continue;
                                                                 }
@@ -363,7 +641,7 @@ void report_0_a_b_cd(uint32_t nVariables)
 
                                                                 if (enqueued == GPUProps.actualConcurrentThreads) {
                                                                         sendAndReport<Function_0_a_b_c_d_ef>(h_funcArray, d_funcArray, h_isMaxLength,
-                                                                                        d_isMaxLength, enqueued, m_maxPossibleLength);
+                                                                                        d_isMaxLength, enqueued, maxPossibleLength);
                                                                         enqueued = 0;
                                                                 }
 
@@ -376,7 +654,7 @@ void report_0_a_b_cd(uint32_t nVariables)
 
                 if (enqueued != 0) {
                         sendAndReport<Function_0_a_b_c_d_ef>(h_funcArray, d_funcArray, h_isMaxLength,
-                                        d_isMaxLength, enqueued, m_maxPossibleLength);
+                                        d_isMaxLength, enqueued, maxPossibleLength);
                 }
 
                 cudaFree(d_funcArray);
@@ -395,7 +673,7 @@ void report_0_a_b_cd(uint32_t nVariables)
          ***********************************************************************/
 
         FuncGenerator_0_a_b_cde::FuncGenerator_0_a_b_cde(uint32_t nVariables)
-                : m_nVariables(nVariables), m_maxPossibleLength((1 << m_nVariables) - 1)
+                : nVariables(nVariables), maxPossibleLength((1 << nVariables) - 1)
         {}
 
 
@@ -429,16 +707,16 @@ void report_0_a_b_cd(uint32_t nVariables)
 
                 uint32_t enqueued = 0;
 
-                for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
-                        for (int32_t b = a + 1; b <= m_nVariables - 1; b++) {
+                for (int32_t a = 1; a <= (nVariables + 1) / 2; a++) {
+                        for (int32_t b = a + 1; b <= nVariables - 1; b++) {
 
 
-                                for (int32_t c = 1; c <= m_nVariables - 3; c++) { /* -3 to leave room for d and e */
-                                        for (int32_t d = c + 1; d <= m_nVariables - 2; d++) {
-                                                for (int32_t e = d + 1; e <= m_nVariables - 1; e++) {
+                                for (int32_t c = 1; c <= nVariables - 3; c++) { /* -3 to leave room for d and e */
+                                        for (int32_t d = c + 1; d <= nVariables - 2; d++) {
+                                                for (int32_t e = d + 1; e <= nVariables - 1; e++) {
 
                                                         // Keep the function for later evaluation
-                                                        Function_0_a_b_cde func(a, b, c, d, e, m_nVariables);
+                                                        Function_0_a_b_cde func(a, b, c, d, e, nVariables);
                                                         if (!func.isCanonicalForm()) {
                                                                 continue;
                                                         }
@@ -447,7 +725,7 @@ void report_0_a_b_cd(uint32_t nVariables)
 
                                                         if (enqueued == GPUProps.actualConcurrentThreads) {
                                                                 sendAndReport<Function_0_a_b_cde>(h_funcArray, d_funcArray, h_isMaxLength,
-                                                                                d_isMaxLength, enqueued, m_maxPossibleLength);
+                                                                                d_isMaxLength, enqueued, maxPossibleLength);
                                                                 enqueued = 0;
                                                         }
 
@@ -459,7 +737,7 @@ void report_0_a_b_cd(uint32_t nVariables)
 
                 if (enqueued != 0) {
                         sendAndReport<Function_0_a_b_cde>(h_funcArray, d_funcArray, h_isMaxLength,
-                                        d_isMaxLength, enqueued, m_maxPossibleLength);
+                                        d_isMaxLength, enqueued, maxPossibleLength);
                 }
 
                 cudaFree(d_funcArray);
@@ -474,7 +752,12 @@ int main(int argc, char *argv[])
 {
 #pragma omp parallel
 #pragma omp single
-        report_0_a_b_cd(atoi(argv[1]));
+        {
+                report<Function_0_a_b_cd>(atoi(argv[1]));
+                report<Function_0_a_bc_de>(atoi(argv[1]));
+                report<Function_0_a_b_c_d_ef>(atoi(argv[1]));
+                report<Function_0_a_b_cde>(atoi(argv[1]));
+        }
 
         return 0;
 }
