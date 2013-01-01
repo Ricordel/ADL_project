@@ -9,7 +9,7 @@
 #include "dbg.h"
 
 
-#define FUNCS_PER_KERNEL (1 << 16)
+#define FUNCS_PER_KERNEL (1 << 20)
 
 
 
@@ -133,12 +133,11 @@ __global__ void kernel_0_a_b_cd(struct Function_0_a_b_cd *d_funcArray,
 
 
 
-__global__ void kernel_0_a_b_cd_filter_short(struct Function_0_a_b_cd *d_funcArray,
-                                             uint32_t nQueued, uint32_t maxPossibleLength)
+__global__ void kernel_0_a_b_cd_filter(struct Function_0_a_b_cd *d_funcArray,
+                                       uint32_t nQueued, uint32_t filterValue)
 {
     // Get my position
     uint32_t me = blockIdx.x * blockDim.x + threadIdx.x;
-    uint32_t end = maxPossibleLength >> 1;
 
     if (me < nQueued) {
         // Copy things into registers
@@ -148,18 +147,21 @@ __global__ void kernel_0_a_b_cd_filter_short(struct Function_0_a_b_cd *d_funcArr
         uint8_t d = d_funcArray[me].d;
         uint8_t nVariables = d_funcArray[me].nVariables;
 
-        uint32_t curVal = 1;
-        uint32_t length = 0;
+        uint32_t curVal = d_funcArray[me].curVal;
+        uint32_t length = d_funcArray[me].lengthSoFar;
+
         uint32_t newBit = 0;
 
-        for (length = 0; length < end; length++) {
+        // Unroll the first iteration to put curVal != 1 in the for condition
+        newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
+                (bit(c, curVal) & bit(d, curVal));
+        curVal = (curVal >> 1) | (newBit << (nVariables - 1));
+        length++;
+
+        for (/* done */; curVal != 1 && length < filterValue; length++) {
             newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
                     (bit(c, curVal) & bit(d, curVal));
             curVal = (curVal >> 1) | (newBit << (nVariables - 1));
-
-            if (curVal == 1) {
-                break;
-            }
         }
 
         if (curVal == 1) { /* We are done */
@@ -177,10 +179,10 @@ __global__ void kernel_0_a_b_cd_filter_short(struct Function_0_a_b_cd *d_funcArr
 
 
 
-void sendAndFilter_0_a_b_cd(std::vector<struct Function_0_a_b_cd>& h_funcArray,
-                            std::vector<struct Function_0_a_b_cd>& h_remainingFuncArray,
-                            CudaMallocWrapper<struct Function_0_a_b_cd>& d_funcArray,
-                            uint32_t maxPossibleLength)
+void sendAndFilterTo_0_a_b_cd(std::vector<struct Function_0_a_b_cd>& h_funcArray,
+                              std::vector<struct Function_0_a_b_cd>& h_remainingFuncArray,
+                              CudaMallocWrapper<struct Function_0_a_b_cd>& d_funcArray,
+                              uint32_t filterValue)
 {
     uint32_t nBlocks, nThreadsPerBlock, nQueued;
     nQueued = h_funcArray.size();
@@ -190,7 +192,7 @@ void sendAndFilter_0_a_b_cd(std::vector<struct Function_0_a_b_cd>& h_funcArray,
     nBlocks = nQueued / GPUProps.maxThreadsPerBlock + (nQueued % GPUProps.maxThreadsPerBlock == 0 ? 0 : 1);
     nThreadsPerBlock = (nBlocks == 1) ? nQueued : GPUProps.maxThreadsPerBlock;
 
-    kernel_0_a_b_cd_filter_short <<< nBlocks, nThreadsPerBlock >>>(d_funcArray.mem, nQueued, maxPossibleLength);
+    kernel_0_a_b_cd_filter<<< nBlocks, nThreadsPerBlock >>>(d_funcArray.mem, nQueued, filterValue);
 
     cudaMemcpyWrapped<struct Function_0_a_b_cd>(&h_funcArray[0], d_funcArray.mem, nQueued, cudaMemcpyDeviceToHost);
 
@@ -222,6 +224,7 @@ void sendAndReport_0_a_b_cd(std::vector<struct Function_0_a_b_cd>& h_funcArray,
 
     for (int i = 0; i < nQueued; i++) {
         if (h_funcArray[i].lengthSoFar == maxPossibleLength) {
+            std::cout << "i: "<< i << std::endl;
             std::cout << "0," << (uint32_t)h_funcArray[i].a << "," << (uint32_t)h_funcArray[i].b
                       << ",(" << (uint32_t)h_funcArray[i].c << "," << (uint32_t)h_funcArray[i].d << ")"
                       << std::endl;
@@ -264,7 +267,8 @@ void report_0_a_b_cd(uint32_t nVariables)
                     h_funcArray.push_back(func);
 
                     if (h_funcArray.size() == FUNCS_PER_KERNEL) {
-                        sendAndFilter_0_a_b_cd(h_funcArray, h_remainingFuncArray, d_funcArray, maxPossibleLength);
+                        sendAndFilterTo_0_a_b_cd(h_funcArray, h_remainingFuncArray, d_funcArray, maxPossibleLength / 9);
+            /*sendAndReport_0_a_b_cd(h_funcArray, d_funcArray, maxPossibleLength);*/
 
                         h_funcArray.clear();
                     }
@@ -274,14 +278,42 @@ void report_0_a_b_cd(uint32_t nVariables)
     }
 
     if (h_funcArray.size() != 0) {
-        sendAndFilter_0_a_b_cd(h_funcArray, h_remainingFuncArray, d_funcArray, maxPossibleLength);
+        sendAndFilterTo_0_a_b_cd(h_funcArray, h_remainingFuncArray, d_funcArray, maxPossibleLength / 9);
+            /*sendAndReport_0_a_b_cd(h_funcArray, d_funcArray, maxPossibleLength);*/
     }
 
+    //XXX continuer d'investiguer, essayer de comprendre pourquoi le 2è filtrage est TOUJOURS inutile
+    //XXX essayer avec des valeurs encore plus petites pour le premier filtrave, /3 est meilleur que /2
+    //XXX par exemple !
+    //XXX Peut-être qu'il serait plus intéressant de faire les divers filtrages sur de petites
+    //XXX valeurs, par exemple /8, /4, /2, ...
 
-    // Now that short functions have been filtered, send the rest to be finished
+#if 1
+    std::vector<Function_0_a_b_cd> h_remainingFuncArray_2;
+    //XXX utiliser le même h_remainingFuncArray n'est pas correct !
+    // And now go to the end
     h_funcArray.clear();
     for (int i = 0; i < h_remainingFuncArray.size(); i++) {
         h_funcArray.push_back(h_remainingFuncArray[i]);
+        if (i == FUNCS_PER_KERNEL) {
+            sendAndFilterTo_0_a_b_cd(h_funcArray, h_remainingFuncArray_2, d_funcArray, maxPossibleLength / 3);
+            h_funcArray.clear();
+        }
+    }
+
+    if (h_funcArray.size() != 0) {
+            sendAndFilterTo_0_a_b_cd(h_funcArray, h_remainingFuncArray_2, d_funcArray, maxPossibleLength / 3);
+            h_funcArray.clear();
+    }
+#endif
+
+
+#if 1
+
+    // And now go to the end
+    h_funcArray.clear();
+    for (int i = 0; i < h_remainingFuncArray_2.size(); i++) {
+        h_funcArray.push_back(h_remainingFuncArray_2[i]);
         if (i == FUNCS_PER_KERNEL) {
             sendAndReport_0_a_b_cd(h_funcArray, d_funcArray, maxPossibleLength);
             h_funcArray.clear();
@@ -291,6 +323,7 @@ void report_0_a_b_cd(uint32_t nVariables)
     if (h_funcArray.size() != 0) {
             sendAndReport_0_a_b_cd(h_funcArray, d_funcArray, maxPossibleLength);
     }
+#endif
 
 }
 
