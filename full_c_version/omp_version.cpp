@@ -92,6 +92,7 @@ void report<Function_0_a_b_cd>(uint8_t nVariables)
         uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
 
         /* Generate the functions */
+#pragma omp task untied
         for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
                 for (uint8_t b = a + 1; b <= nVariables - 1; b++) {
 
@@ -159,11 +160,11 @@ class Function_0_a_bc_de {
 
                 bool is_canonical() const
                 {
-                        int8_t ar = nVariables - a;
-                        int8_t br = nVariables - b;
-                        int8_t cr = nVariables - c;
-                        int8_t dr = nVariables - d;
-                        int8_t er = nVariables - e;
+                        uint8_t ar = nVariables - a;
+                        uint8_t br = nVariables - b;
+                        uint8_t cr = nVariables - c;
+                        uint8_t dr = nVariables - d;
+                        uint8_t er = nVariables - e;
 
                         if (b == d && c == e) {
                                 return false;
@@ -184,8 +185,6 @@ class Function_0_a_bc_de {
                         uint32_t curVal = 1;
 
                         do {
-                                //XXX essayer d'inliner newBit, pour voir... Mais a priori, un 
-                                //XXX compilateur est assez bon pour faire ça tout seul.
                                 newBit = bit(0, curVal) ^ bit(a, curVal) ^
                                         (bit(b, curVal) & bit(c, curVal)) ^
                                         (bit(d, curVal) & bit(e, curVal));
@@ -214,13 +213,14 @@ void report<Function_0_a_bc_de>(uint8_t nVariables)
         uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
 
         /* Generate the functions */
-        for (int32_t a = 1; a <= (nVariables + 1) / 2; a++) {
+#pragma omp task untied
+        for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
 
-                for (int32_t b = 1; b <= nVariables - 2; b++) {
-                        for (int32_t c = b + 1; c <= nVariables - 1; c++) {
+                for (uint8_t b = 1; b <= nVariables - 2; b++) {
+                        for (uint8_t c = b + 1; c <= nVariables - 1; c++) {
 
-                                for (int32_t d = b; d <= nVariables - 2; d++) {
-                                        for (int32_t e = d + 1; e <= nVariables - 1; e++) {
+                                for (uint8_t d = b; d <= nVariables - 2; d++) {
+                                        for (uint8_t e = d + 1; e <= nVariables - 1; e++) {
 
                                                 // Keep the function for later evaluation
                                                 Function_0_a_bc_de func = {a, b, c, d, e, nVariables};
@@ -287,12 +287,12 @@ class Function_0_a_b_c_d_ef {
 
                 bool is_canonical() const
                 {
-                        int8_t ar = nVariables - a;
-                        int8_t br = nVariables - b;
-                        int8_t cr = nVariables - c;
-                        int8_t dr = nVariables - d;
-                        int8_t er = nVariables - e;
-                        int8_t fr = nVariables - f;
+                        uint8_t ar = nVariables - a;
+                        uint8_t br = nVariables - b;
+                        uint8_t cr = nVariables - c;
+                        uint8_t dr = nVariables - d;
+                        uint8_t er = nVariables - e;
+                        uint8_t fr = nVariables - f;
 
                         Function_0_a_b_c_d_ef other = {dr, cr, br, ar, fr, er, nVariables};
 
@@ -338,6 +338,7 @@ void report<Function_0_a_b_c_d_ef>(uint8_t nVariables)
         uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
 
         /* Generate the functions */
+#pragma omp task untied
         for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
                 for (uint8_t b = a + 1; b <= nVariables - 3; b++) { /* -3 to leave room for c and d */
                         for (uint8_t c = b + 1; c <= nVariables - 2; c++) { /* -2 to leave room for d */
@@ -409,11 +410,11 @@ class Function_0_a_b_cde {
 
                 bool is_canonical() const
                 {
-                        int32_t ar = nVariables - a;
-                        int32_t br = nVariables - b;
-                        int32_t cr = nVariables - c;
-                        int32_t dr = nVariables - d;
-                        int32_t er = nVariables - e;
+                        uint8_t ar = nVariables - a;
+                        uint8_t br = nVariables - b;
+                        uint8_t cr = nVariables - c;
+                        uint8_t dr = nVariables - d;
+                        uint8_t er = nVariables - e;
 
                         Function_0_a_b_cde other = {br, ar, er, dr, cr, nVariables};
                         return smaller_or_equal(other);
@@ -456,6 +457,7 @@ void report<Function_0_a_b_cde>(uint8_t nVariables)
         uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
 
         /* Generate the functions */
+#pragma omp task untied
         for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
                 for (uint8_t b = a + 1; b <= nVariables - 1; b++) {
 
@@ -487,265 +489,6 @@ void report<Function_0_a_b_cde>(uint8_t nVariables)
 
 
 
-
-
-
-#if 0
-
-
-        /***********************************************************************
-         ******************** For x0 + xa + xb.xc + xd.xe **********************
-         ***********************************************************************/
-
-        FuncGenerator_0_a_bc_de::FuncGenerator_0_a_bc_de(uint32_t nVariables)
-                : nVariables(nVariables), maxPossibleLength((1 << nVariables) - 1)
-        {}
-
-        FuncGenerator_0_a_bc_de::~FuncGenerator_0_a_bc_de() {}
-
-
-
-
-        void FuncGenerator_0_a_bc_de::reportMaxFunctions()
-        {
-                getGPUProperties();
-
-                // The lexicographical order is difficult to handle in the generation
-                // for b,c and d,e. So this will be handled in isCanonicalForm()
-
-                // d can start from b, because if d < b, then a commutatively equivalent function
-                // will have been tested (as b.c and d.e can commute around +), and that variant
-                // would be smaller by lexicographical order.
-
-                // We don't want b = c AND d = e either, which gives us kind of a "degenerated" function.
-                // This is also handled in isCanonicalForm()
-
-                cudaError_t ret;
-
-                std::vector<Function_0_a_bc_de> h_funcVector;
-                Function_0_a_bc_de *h_funcArray;
-                Function_0_a_bc_de *d_funcArray;
-                bool *d_isMaxLength;
-                bool *h_isMaxLength;
-
-                h_isMaxLength = new bool[GPUProps.actualConcurrentThreads];
-                h_funcArray = new Function_0_a_bc_de[GPUProps.actualConcurrentThreads];
-
-                ret = cudaMalloc((void **) &d_isMaxLength, GPUProps.actualConcurrentThreads * sizeof(bool));
-                if (ret != cudaSuccess) {
-                        throw std::runtime_error("No more memory on device for bools");
-                }
-
-                ret = cudaMalloc((void **) &d_funcArray, GPUProps.actualConcurrentThreads * sizeof(Function_0_a_bc_de));
-                if (ret != cudaSuccess) {
-                        throw std::runtime_error("No more memory on device for Function_0_a_bc_de");
-                }
-
-                uint32_t enqueued = 0;
-
-                for (int32_t a = 1; a <= (nVariables + 1) / 2; a++) {
-
-                        for (int32_t b = 1; b <= nVariables - 2; b++) {
-                                for (int32_t c = b + 1; c <= nVariables - 1; c++) {
-
-                                        for (int32_t d = b; d <= nVariables - 2; d++) {
-                                                for (int32_t e = d + 1; e <= nVariables - 1; e++) {
-
-                                                        // Keep the function for later evaluation
-                                                        Function_0_a_bc_de func(a, b, c, d, e, nVariables);
-                                                        if (!func.isCanonicalForm()) {
-                                                                continue;
-                                                        }
-
-                                                        h_funcArray[enqueued++] = func;
-
-                                                        if (enqueued == GPUProps.actualConcurrentThreads) {
-                                                                sendAndReport<Function_0_a_bc_de>(h_funcArray, d_funcArray, h_isMaxLength,
-                                                                                d_isMaxLength, enqueued, maxPossibleLength);
-                                                                enqueued = 0;
-                                                        }
-                                                }
-                                        }
-                                }
-                        }
-                }
-
-                if (enqueued != 0) {
-                        sendAndReport<Function_0_a_bc_de>(h_funcArray, d_funcArray, h_isMaxLength,
-                                        d_isMaxLength, enqueued, maxPossibleLength);
-                }
-
-                cudaFree(d_funcArray);
-                cudaFree(d_isMaxLength);
-                delete [] h_isMaxLength;
-                delete [] h_funcArray;
-        }
-
-
-
-
-        /***********************************************************************
-         **************** For x0 + xa + xb + xc + xd + xe.xf *******************
-         ***********************************************************************/
-
-        FuncGenerator_0_a_b_c_d_ef::FuncGenerator_0_a_b_c_d_ef(uint32_t nVariables)
-                : nVariables(nVariables), maxPossibleLength((1 << nVariables) - 1)
-        {}
-
-
-        FuncGenerator_0_a_b_c_d_ef::~FuncGenerator_0_a_b_c_d_ef()
-        {}
-
-
-        void FuncGenerator_0_a_b_c_d_ef::reportMaxFunctions()
-        {
-                getGPUProperties();
-
-                cudaError_t ret;
-
-                Function_0_a_b_c_d_ef *h_funcArray;
-                Function_0_a_b_c_d_ef *d_funcArray;
-                bool *d_isMaxLength;
-                bool *h_isMaxLength;
-
-                h_isMaxLength = new bool[GPUProps.actualConcurrentThreads];
-                h_funcArray = new Function_0_a_b_c_d_ef[GPUProps.actualConcurrentThreads];
-
-                ret = cudaMalloc((void **) &d_isMaxLength, GPUProps.actualConcurrentThreads * sizeof(bool));
-                if (ret != cudaSuccess) {
-                        throw std::runtime_error("No more memory on device for bools");
-                }
-
-                ret = cudaMalloc((void **) &d_funcArray, GPUProps.actualConcurrentThreads * sizeof(Function_0_a_b_c_d_ef));
-                if (ret != cudaSuccess) {
-                        throw std::runtime_error("No more memory on device for Function_0_a_b_c_d_ef");
-                }
-
-                uint32_t enqueued = 0;
-
-                for (int32_t a = 1; a <= (nVariables + 1) / 2; a++) {
-                        for (int32_t b = a + 1; b <= nVariables - 3; b++) { /* -3 to leave room for c and d */
-                                for (int32_t c = b + 1; c <= nVariables - 2; c++) { /* -2 to leave room for d */
-                                        for (int32_t d = c + 1; d <= nVariables - 1; d++) {
-
-                                                for (int32_t e = 1; e <= nVariables - 2; e++) {
-                                                        for (int32_t f = e + 1; f <= nVariables - 1; f++) {
-
-                                                                // Keep the function for later evaluation
-                                                                Function_0_a_b_c_d_ef func(a, b, c, d, e, f, nVariables);
-                                                                if (!func.isCanonicalForm()) {
-                                                                        continue;
-                                                                }
-
-                                                                h_funcArray[enqueued++] = func;
-
-                                                                if (enqueued == GPUProps.actualConcurrentThreads) {
-                                                                        sendAndReport<Function_0_a_b_c_d_ef>(h_funcArray, d_funcArray, h_isMaxLength,
-                                                                                        d_isMaxLength, enqueued, maxPossibleLength);
-                                                                        enqueued = 0;
-                                                                }
-
-                                                        }
-                                                }
-                                        }
-                                }
-                        }
-                }
-
-                if (enqueued != 0) {
-                        sendAndReport<Function_0_a_b_c_d_ef>(h_funcArray, d_funcArray, h_isMaxLength,
-                                        d_isMaxLength, enqueued, maxPossibleLength);
-                }
-
-                cudaFree(d_funcArray);
-                cudaFree(d_isMaxLength);
-                delete [] h_isMaxLength;
-                delete [] h_funcArray;
-        }
-
-
-
-
-
-
-        /***********************************************************************
-         **************** For x0 + xa + xb + xc.xd.xe *******************
-         ***********************************************************************/
-
-        FuncGenerator_0_a_b_cde::FuncGenerator_0_a_b_cde(uint32_t nVariables)
-                : nVariables(nVariables), maxPossibleLength((1 << nVariables) - 1)
-        {}
-
-
-        FuncGenerator_0_a_b_cde::~FuncGenerator_0_a_b_cde()
-        {}
-
-
-        void FuncGenerator_0_a_b_cde::reportMaxFunctions()
-        {
-                getGPUProperties();
-
-                cudaError_t ret;
-
-                Function_0_a_b_cde *h_funcArray;
-                Function_0_a_b_cde *d_funcArray;
-                bool *d_isMaxLength;
-                bool *h_isMaxLength;
-
-                h_isMaxLength = new bool[GPUProps.actualConcurrentThreads];
-                h_funcArray = new Function_0_a_b_cde[GPUProps.actualConcurrentThreads];
-
-                ret = cudaMalloc((void **) &d_isMaxLength, GPUProps.actualConcurrentThreads * sizeof(bool));
-                if (ret != cudaSuccess) {
-                        throw std::runtime_error("No more memory on device for bools");
-                }
-
-                ret = cudaMalloc((void **) &d_funcArray, GPUProps.actualConcurrentThreads * sizeof(Function_0_a_b_cde));
-                if (ret != cudaSuccess) {
-                        throw std::runtime_error("No more memory on device for Function_0_a_b_cde");
-                }
-
-                uint32_t enqueued = 0;
-
-                for (int32_t a = 1; a <= (nVariables + 1) / 2; a++) {
-                        for (int32_t b = a + 1; b <= nVariables - 1; b++) {
-
-
-                                for (int32_t c = 1; c <= nVariables - 3; c++) { /* -3 to leave room for d and e */
-                                        for (int32_t d = c + 1; d <= nVariables - 2; d++) {
-                                                for (int32_t e = d + 1; e <= nVariables - 1; e++) {
-
-                                                        // Keep the function for later evaluation
-                                                        Function_0_a_b_cde func(a, b, c, d, e, nVariables);
-                                                        if (!func.isCanonicalForm()) {
-                                                                continue;
-                                                        }
-
-                                                        h_funcArray[enqueued++] = func;
-
-                                                        if (enqueued == GPUProps.actualConcurrentThreads) {
-                                                                sendAndReport<Function_0_a_b_cde>(h_funcArray, d_funcArray, h_isMaxLength,
-                                                                                d_isMaxLength, enqueued, maxPossibleLength);
-                                                                enqueued = 0;
-                                                        }
-
-                                                }
-                                        }
-                                }
-                        }
-                }
-
-                if (enqueued != 0) {
-                        sendAndReport<Function_0_a_b_cde>(h_funcArray, d_funcArray, h_isMaxLength,
-                                        d_isMaxLength, enqueued, maxPossibleLength);
-                }
-
-                cudaFree(d_funcArray);
-                cudaFree(d_isMaxLength);
-                delete [] h_isMaxLength;
-                delete [] h_funcArray;
-        }
-#endif
 
 
 int main(int argc, char *argv[])
