@@ -92,7 +92,7 @@ void report<Function_0_a_b_cd>(uint8_t nVariables)
         uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
 
         /* Generate the functions */
-#pragma omp task untied
+//#pragma omp task untied
         for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
                 for (uint8_t b = a + 1; b <= nVariables - 1; b++) {
 
@@ -102,7 +102,7 @@ void report<Function_0_a_b_cd>(uint8_t nVariables)
                                         // Keep the function for later evaluation
                                         Function_0_a_b_cd func = {a, b, c, d, nVariables};
 
-                                        //#pragma omp task
+                                        #pragma omp task
                                         {
                                                 if (func.is_canonical()) {
                                                         uint32_t length = func.cycle_length();
@@ -117,7 +117,7 @@ void report<Function_0_a_b_cd>(uint8_t nVariables)
                 }
         }
 
-//#pragma omp taskwait
+#pragma omp taskwait
 }
 
 
@@ -213,7 +213,7 @@ void report<Function_0_a_bc_de>(uint8_t nVariables)
         uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
 
         /* Generate the functions */
-#pragma omp task untied
+//#pragma omp task untied
         for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
 
                 for (uint8_t b = 1; b <= nVariables - 2; b++) {
@@ -338,7 +338,7 @@ void report<Function_0_a_b_c_d_ef>(uint8_t nVariables)
         uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
 
         /* Generate the functions */
-#pragma omp task untied
+//#pragma omp task untied
         for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
                 for (uint8_t b = a + 1; b <= nVariables - 3; b++) { /* -3 to leave room for c and d */
                         for (uint8_t c = b + 1; c <= nVariables - 2; c++) { /* -2 to leave room for d */
@@ -457,7 +457,7 @@ void report<Function_0_a_b_cde>(uint8_t nVariables)
         uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
 
         /* Generate the functions */
-#pragma omp task untied
+//#pragma omp task untied
         for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
                 for (uint8_t b = a + 1; b <= nVariables - 1; b++) {
 

@@ -9,7 +9,7 @@
 #include "dbg.h"
 
 
-#define FUNCS_PER_KERNEL (1 << 20)
+#define FUNCS_PER_KERNEL (1 << 25)
 
 
 
@@ -37,7 +37,9 @@ void getGPUProperties()
         throw std::runtime_error("Failed to get device properties: " + std::string(cudaGetErrorString(ret)));
     }
 
-    GPUProps.maxThreadsPerBlock = deviceProp.maxThreadsDim[0];
+    /*GPUProps.maxThreadsPerBlock = deviceProp.maxThreadsDim[0];*/
+    //XXX tentative
+    GPUProps.maxThreadsPerBlock = 256;
     GPUProps.maxConcurrentBlocks = deviceProp.maxGridSize[0];
     GPUProps.maxConcurrentThreads = GPUProps.maxThreadsPerBlock * GPUProps.maxConcurrentBlocks;
 
@@ -107,14 +109,15 @@ __global__ void kernel_0_a_b_cd(struct Function_0_a_b_cd *d_funcArray,
 
     if (me < nQueued) {
         // Copy things into registers
-        uint8_t a = d_funcArray[me].a;
-        uint8_t b = d_funcArray[me].b;
-        uint8_t c = d_funcArray[me].c;
-        uint8_t d = d_funcArray[me].d;
-        uint8_t nVariables = d_funcArray[me].nVariables;
+        struct Function_0_a_b_cd func = d_funcArray[me];
+        uint8_t a = func.a;
+        uint8_t b = func.b;
+        uint8_t c = func.c;
+        uint8_t d = func.d;
+        uint8_t nVariables = func.nVariables;
 
-        uint32_t curVal = d_funcArray[me].curVal;
-        uint32_t length = d_funcArray[me].lengthSoFar;
+        uint32_t curVal = func.curVal;
+        uint32_t length = func.lengthSoFar;
         uint32_t newBit = 0;
 
         do {
@@ -142,14 +145,15 @@ __global__ void kernel_0_a_b_cd_filter(struct Function_0_a_b_cd *d_funcArray,
 
     if (me < nQueued) {
         // Copy things into registers
-        uint8_t a = d_funcArray[me].a;
-        uint8_t b = d_funcArray[me].b;
-        uint8_t c = d_funcArray[me].c;
-        uint8_t d = d_funcArray[me].d;
-        uint8_t nVariables = d_funcArray[me].nVariables;
+        struct Function_0_a_b_cd func = d_funcArray[me];
+        uint8_t a = func.a;
+        uint8_t b = func.b;
+        uint8_t c = func.c;
+        uint8_t d = func.d;
+        uint8_t nVariables = func.nVariables;
 
-        uint32_t curVal = d_funcArray[me].curVal;
-        uint32_t length = d_funcArray[me].lengthSoFar;
+        uint32_t curVal = func.curVal;
+        uint32_t length = func.lengthSoFar;
 
         uint32_t newBit = 0;
 
