@@ -54,6 +54,7 @@ void getGPUProperties()
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////// General template declarations and generic definitions ///////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 
 ////// The following templates will need to be specialized for each type of functions ///////
 
@@ -243,9 +244,9 @@ void report(uint32_t nVariables)
 
 
 
-/**********************************************************************************************
- ********************************* Form x0 + a + b + cd ***************************************
- **********************************************************************************************/
+///////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// Form x0 + a + b + cd ///////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 
 struct __align__(16) Function_0_a_b_cd {
@@ -418,6 +419,201 @@ void generate_functions<Function_0_a_b_cd>(uint32_t nVariables, std::vector<Func
 
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// Form x0 + a + bc + de //////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+
+struct __align__(16) Function_0_a_bc_de {
+    uint8_t a;
+    uint8_t b;
+    uint8_t c;
+    uint8_t d;
+    uint8_t e;
+    uint8_t nVariables;
+
+    uint32_t curVal;
+    uint32_t lengthSoFar;
+    bool done;
+};
+
+
+template <>
+void print_func<Function_0_a_bc_de> (Function_0_a_bc_de& func)
+{
+    std::cout << "0," << (uint32_t)func.a
+              << ",(" << (uint32_t)func.b << "," << (uint32_t)func.c << ")"
+              << ",(" << (uint32_t)func.d << "," << (uint32_t)func.e << ")"
+              << std::endl;
+}
+
+
+
+template <>
+bool smaller_or_equal<Function_0_a_bc_de>(Function_0_a_bc_de& one, Function_0_a_bc_de& other)
+{
+    if (one.a < other.a)
+        return true;
+
+    if (one.a == other.a && one.b < other.b)
+        return true;
+
+    if (one.a == other.a && one.b == other.b && one.c < other.c)
+        return true;
+
+    if (one.a == other.a && one.b == other.b && one.c == other.c && one.d < other.d)
+        return true;
+
+    if (one.a == other.a && one.b == other.b && one.c == other.c && one.d == other.d && one.e <= other.e)
+        return true;
+
+    return false;
+}
+
+
+template <>
+bool canonical<Function_0_a_bc_de>(Function_0_a_bc_de& func)
+{
+    int32_t ar = func.nVariables - func.a;
+    int32_t br = func.nVariables - func.b;
+    int32_t cr = func.nVariables - func.c;
+    int32_t dr = func.nVariables - func.d;
+    int32_t er = func.nVariables - func.e;
+
+    // Commutativity of the two products, checked here because hard to
+    // prevent in the generating loops
+    if (func.b == func.d && func.c == func.e) {
+        return false;
+    }
+
+    Function_0_a_bc_de f1 = {ar, er, dr, cr, br, func.nVariables};
+    Function_0_a_bc_de f2 = {ar, cr, br, er, dr, func.nVariables};
+    Function_0_a_bc_de f3 = {func.a, func.d, func.e, func.b, func.c, func.nVariables};
+
+    return (smaller_or_equal<Function_0_a_bc_de>(func, f1)
+         && smaller_or_equal<Function_0_a_bc_de>(func, f2)
+         && smaller_or_equal<Function_0_a_bc_de>(func, f3));
+}
+
+
+template <>
+__global__ void kernel_to_the_end<Function_0_a_bc_de> (struct Function_0_a_bc_de *d_funcArray,
+                                                      uint32_t nQueued, uint32_t maxPossibleLength)
+{
+    // Get my position
+    uint32_t me = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (me < nQueued) {
+        struct Function_0_a_bc_de func = d_funcArray[me];
+
+        uint8_t a = func.a;
+        uint8_t b = func.b;
+        uint8_t c = func.c;
+        uint8_t d = func.d;
+        uint8_t e = func.e;
+        uint8_t nVariables = func.nVariables;
+
+        uint32_t curVal = func.curVal;
+        uint32_t length = func.lengthSoFar;
+        uint32_t newBit = 0;
+
+        do {
+            newBit = bit(0, curVal) ^ bit(a, curVal) ^
+                    (bit(b, curVal) & bit(c, curVal)) ^
+                    (bit(d, curVal) & bit(e, curVal));
+            curVal = (curVal >> 1) | (newBit << (nVariables - 1));
+
+            length++;
+        } while (curVal != 1);
+
+        d_funcArray[me].lengthSoFar = length;
+        d_funcArray[me].done = true;
+    }
+}
+
+
+
+
+template <>
+__global__ void kernel_filter<Function_0_a_bc_de>(Function_0_a_bc_de *d_funcArray,
+                                                 uint32_t nQueued, uint32_t filterValue)
+{
+    // Get my position
+    uint32_t me = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (me < nQueued) {
+        // Copy things into registers
+        struct Function_0_a_bc_de func = d_funcArray[me];
+
+        uint8_t a = func.a;
+        uint8_t b = func.b;
+        uint8_t c = func.c;
+        uint8_t d = func.d;
+        uint8_t e = func.e;
+        uint8_t nVariables = func.nVariables;
+
+        uint32_t curVal = func.curVal;
+        uint32_t length = func.lengthSoFar;
+
+        uint32_t newBit = 0;
+
+        // Unroll the first iteration to put curVal != 1 in the for condition
+        newBit = bit(0, curVal) ^ bit(a, curVal) ^
+                (bit(b, curVal) & bit(c, curVal)) ^
+                (bit(d, curVal) & bit(e, curVal));
+        curVal = (curVal >> 1) | (newBit << (nVariables - 1));
+        length++;
+
+        for (/* done */; curVal != 1 && length < filterValue; length++) {
+            newBit = bit(0, curVal) ^ bit(a, curVal) ^
+                    (bit(b, curVal) & bit(c, curVal)) ^
+                    (bit(d, curVal) & bit(e, curVal));
+            curVal = (curVal >> 1) | (newBit << (nVariables - 1));
+        }
+
+        if (curVal == 1) { /* We are done */
+            d_funcArray[me].done = true;
+            d_funcArray[me].lengthSoFar = length;
+        } else { /* Some more to go */
+            d_funcArray[me].done = false;
+            d_funcArray[me].lengthSoFar = length;
+            d_funcArray[me].curVal = curVal;
+        }
+
+    }
+}
+
+
+
+
+/************************************ Functions generation **************************************/
+template <>
+void generate_functions<Function_0_a_bc_de>(uint32_t nVariables, std::vector<Function_0_a_bc_de>& funcArray)
+{
+
+    /* Generate the functions */
+    for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
+
+        for (uint8_t b = 1; b <= nVariables - 2; b++) {
+            for (uint8_t c = b + 1; c <= nVariables - 1; c++) {
+
+                for (uint8_t d = b; d <= nVariables - 2; d++) {
+                    for (uint8_t e = d + 1; e <= nVariables - 1; e++) {
+
+                        // Keep the function for later evaluation
+                        struct Function_0_a_bc_de func = {a, b, c, d, e, nVariables, 1, 0, false};
+
+                        if (!canonical<Function_0_a_bc_de>(func)) {
+                            continue;
+                        }
+
+                        funcArray.push_back(func);
+                    }
+                }
+            }
+        }
+    }
+}
 
 #if 0
 
@@ -761,5 +957,6 @@ void FuncGenerator_0_a_b_cde::reportMaxFunctions()
 int main(int argc, char *argv[])
 {
     report<Function_0_a_b_cd>(atoi(argv[1]));
+    report<Function_0_a_bc_de>(atoi(argv[1]));
     return 0;
 }
