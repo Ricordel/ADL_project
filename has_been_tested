@@ -1,0 +1,41 @@
+26 variables:
+    a_b_cd: 
+    a_bc_de:
+    a_b_c_d_ef:
+    a_b_cde:
+
+27 variables:
+    a_b_cd: NOTHING
+    a_bc_de:
+    a_b_c_d_ef:
+    a_b_cde:
+
+28 variables:
+    a_b_cd
+    a_bc_de
+    a_b_c_d_ef
+    a_b_cde
+
+29 variables:
+    a_b_cd
+    a_bc_de
+    a_b_c_d_ef
+    a_b_cde
+
+30 variables:
+    a_b_cd
+    a_bc_de
+    a_b_c_d_ef
+    a_b_cde
+
+31 variables:
+    a_b_cd
+    a_bc_de
+    a_b_c_d_ef
+    a_b_cde
+
+32 variables:
+    a_b_cd
+    a_bc_de
+    a_b_c_d_ef
+    a_b_cde
