@@ -4,6 +4,7 @@
 
 #include <cuda.h>
 #include <stdint.h>
+#include <getopt.h>
 
 #include "cudaMallocWrapper.hpp"
 #include "dbg.h"
@@ -78,8 +79,6 @@ template <typename FuncType> void print_func(FuncType& func);
 
 template <typename FuncType>
 void generate_functions(uint32_t nVariables, std::vector<FuncType>& funcArray);
-
-template <typename FuncType> void report(uint32_t nVariables);
 
 
 
@@ -265,7 +264,8 @@ struct __align__(16) Function_0_a_b_cd {
 template <>
 void print_func<Function_0_a_b_cd> (Function_0_a_b_cd& func)
 {
-    std::cout << "0," << (uint32_t)func.a << "," << (uint32_t)func.b
+    std::cout << (uint32_t) func.nVariables << " variables: "
+              << "0," << (uint32_t)func.a << "," << (uint32_t)func.b
               << ",(" << (uint32_t)func.c << "," << (uint32_t)func.d << ")"
               << std::endl;
 }
@@ -441,7 +441,8 @@ struct __align__(16) Function_0_a_bc_de {
 template <>
 void print_func<Function_0_a_bc_de> (Function_0_a_bc_de& func)
 {
-    std::cout << "0," << (uint32_t)func.a
+    std::cout << (uint32_t) func.nVariables << " variables: "
+              << "0," << (uint32_t)func.a
               << ",(" << (uint32_t)func.b << "," << (uint32_t)func.c << ")"
               << ",(" << (uint32_t)func.d << "," << (uint32_t)func.e << ")"
               << std::endl;
@@ -615,258 +616,201 @@ void generate_functions<Function_0_a_bc_de>(uint32_t nVariables, std::vector<Fun
     }
 }
 
-#if 0
 
 
 
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////// Form x0 + a + b + c + d + ef ///////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 
-    template <class FunctionType>
-__global__ void kernel(FunctionType *d_funcArray, bool *d_isMaxLength, uint32_t nFunctions, uint32_t maxPossibleLength)
+
+struct __align__(16) Function_0_a_b_c_d_ef {
+    uint8_t a;
+    uint8_t b;
+    uint8_t c;
+    uint8_t d;
+    uint8_t e;
+    uint8_t f;
+    uint8_t nVariables;
+
+    uint32_t curVal;
+    uint32_t lengthSoFar;
+    bool done;
+};
+
+
+template <>
+void print_func<Function_0_a_b_c_d_ef> (Function_0_a_b_c_d_ef& func)
 {
-    // Get my position in the grid
+    std::cout << (uint32_t) func.nVariables << " variables: "
+              << "0," << (uint32_t)func.a << "," << (uint32_t)func.b
+              << ","  << (uint32_t)func.c << "," << (uint32_t)func.d
+              << ",(" << (uint32_t)func.e << "," << (uint32_t)func.f << ")"
+              << std::endl;
+}
+
+
+
+template <>
+bool smaller_or_equal<Function_0_a_b_c_d_ef>(Function_0_a_b_c_d_ef& one, Function_0_a_b_c_d_ef& other)
+{
+    if (one.a < other.a)
+        return true;
+
+    if (one.a == other.a && one.b < other.b)
+        return true;
+
+    if (one.a == other.a && one.b == other.b && one.c < other.c)
+        return true;
+
+    if (one.a == other.a && one.b == other.b && one.c == other.c && one.d < other.d)
+        return true;
+
+    if (one.a == other.a && one.b == other.b && one.c == other.c && one.d == other.d && one.e < other.e)
+        return true;
+
+    if (one.a == other.a && one.b == other.b && one.c == other.c && one.d == other.d && one.e == other.e && one.f <= other.f)
+        return true;
+
+    return false;
+}
+
+
+template <>
+bool canonical<Function_0_a_b_c_d_ef>(Function_0_a_b_c_d_ef& func)
+{
+    int32_t ar = func.nVariables - func.a;
+    int32_t br = func.nVariables - func.b;
+    int32_t cr = func.nVariables - func.c;
+    int32_t dr = func.nVariables - func.d;
+    int32_t er = func.nVariables - func.e;
+    int32_t fr = func.nVariables - func.f;
+
+    Function_0_a_b_c_d_ef other = {dr, cr, br, ar, fr, er, func.nVariables};
+    return smaller_or_equal(func, other);
+}
+
+
+template <>
+__global__ void kernel_to_the_end<Function_0_a_b_c_d_ef> (struct Function_0_a_b_c_d_ef *d_funcArray,
+                                                      uint32_t nQueued, uint32_t maxPossibleLength)
+{
+    // Get my position
     uint32_t me = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (me < nFunctions) {
-        if (d_funcArray[me].getCycleLength_device() == maxPossibleLength) {
-            d_isMaxLength[me] = true;
-        } else {
-            d_isMaxLength[me] = false;
-        }
-    }
+    if (me < nQueued) {
+        struct Function_0_a_b_c_d_ef func = d_funcArray[me];
 
-}
+        uint8_t a = func.a;
+        uint8_t b = func.b;
+        uint8_t c = func.c;
+        uint8_t d = func.d;
+        uint8_t e = func.e;
+        uint8_t f = func.f;
+        uint8_t nVariables = func.nVariables;
 
+        uint32_t curVal = func.curVal;
+        uint32_t length = func.lengthSoFar;
+        uint32_t newBit = 0;
 
+        do {
+            newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
+                     bit(c, curVal) ^ bit(d, curVal) ^
+                    (bit(e, curVal) & bit(f, curVal));
+            curVal = (curVal >> 1) | (newBit << (nVariables - 1));
 
+            length++;
+        } while (curVal != 1);
 
-
-
-
-    template <class FunctionType>
-static void send_and_report(FunctionType *h_funcArray, FunctionType *d_funcArray,
-        bool *h_isMaxLength, bool *d_isMaxLength, uint32_t enqueued, uint32_t maxPossibleLength)
-{
-    cudaError_t ret;
-    uint32_t nBlocks, nThreadsPerBlock;
-
-    std::cerr << "Sending " << enqueued << " functions to device" << std::endl;
-
-    ret = cudaMemcpy(d_funcArray, h_funcArray, enqueued * sizeof(FunctionType), cudaMemcpyHostToDevice);
-    if (ret != cudaSuccess) {
-        throw std::runtime_error("Failed to memcpy to device: " + std::string(cudaGetErrorString(ret)));
-    }
-
-    nBlocks = enqueued / GPUProps.maxThreadsPerBlock + (enqueued % GPUProps.maxThreadsPerBlock == 0 ? 0 : 1);
-
-    nThreadsPerBlock = (nBlocks == 1) ? enqueued : GPUProps.maxThreadsPerBlock;
-
-    std::cerr << "Launching kernel" << std::endl;
-    // Launch kernel
-    kernel<FunctionType> <<< nBlocks, nThreadsPerBlock >>> (d_funcArray, d_isMaxLength, enqueued, maxPossibleLength);
-
-    ret = cudaMemcpy(h_isMaxLength, d_isMaxLength, enqueued * sizeof(bool), cudaMemcpyDeviceToHost);
-    if (ret != cudaSuccess) {
-        throw std::runtime_error("Kernel execution failed: " + std::string(cudaGetErrorString(ret)));
-    }
-
-    std::cerr << "Kernel has returned successfully" << std::endl;
-
-    for (int i = 0; i < enqueued; i++) {
-        if (h_isMaxLength[i]) {
-            std::cout << h_funcArray[i].toString() << std::endl;
-        }
+        d_funcArray[me].lengthSoFar = length;
+        d_funcArray[me].done = true;
     }
 }
 
 
 
 
-/***********************************************************************
- ********************* For x0 + xa + xb + xc.xd ************************
- ***********************************************************************/
-
-    FuncGenerator_0_a_b_cd::FuncGenerator_0_a_b_cd(uint32_t nVariables)
-: m_nVariables(nVariables), m_maxPossibleLength((1 << nVariables) - 1)
-{}
-
-FuncGenerator_0_a_b_cd::~FuncGenerator_0_a_b_cd() {}
-
-
-
-
-
-
-
-/***********************************************************************
- ******************** For x0 + xa + xb.xc + xd.xe **********************
- ***********************************************************************/
-
-    FuncGenerator_0_a_bc_de::FuncGenerator_0_a_bc_de(uint32_t nVariables)
-: m_nVariables(nVariables), m_maxPossibleLength((1 << m_nVariables) - 1)
-{}
-
-FuncGenerator_0_a_bc_de::~FuncGenerator_0_a_bc_de() {}
-
-
-
-
-void FuncGenerator_0_a_bc_de::reportMaxFunctions()
+template <>
+__global__ void kernel_filter<Function_0_a_b_c_d_ef>(Function_0_a_b_c_d_ef *d_funcArray,
+                                                 uint32_t nQueued, uint32_t filterValue)
 {
-    getGPUProperties();
+    // Get my position
+    uint32_t me = blockIdx.x * blockDim.x + threadIdx.x;
 
-    // The lexicographical order is difficult to handle in the generation
-    // for b,c and d,e. So this will be handled in isCanonicalForm()
+    if (me < nQueued) {
+        // Copy things into registers
+        struct Function_0_a_b_c_d_ef func = d_funcArray[me];
 
-    // d can start from b, because if d < b, then a commutatively equivalent function
-    // will have been tested (as b.c and d.e can commute around +), and that variant
-    // would be smaller by lexicographical order.
+        uint8_t a = func.a;
+        uint8_t b = func.b;
+        uint8_t c = func.c;
+        uint8_t d = func.d;
+        uint8_t e = func.e;
+        uint8_t f = func.f;
+        uint8_t nVariables = func.nVariables;
 
-    // We don't want b = c AND d = e either, which gives us kind of a "degenerated" function.
-    // This is also handled in isCanonicalForm()
+        uint32_t curVal = func.curVal;
+        uint32_t length = func.lengthSoFar;
 
-    cudaError_t ret;
+        uint32_t newBit = 0;
 
-    std::vector<Function_0_a_bc_de> h_funcVector;
-    Function_0_a_bc_de *h_funcArray;
-    Function_0_a_bc_de *d_funcArray;
-    bool *d_isMaxLength;
-    bool *h_isMaxLength;
+        // Unroll the first iteration to put curVal != 1 in the for condition
+        newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
+                 bit(c, curVal) ^ bit(d, curVal) ^
+                (bit(e, curVal) & bit(f, curVal));
+        curVal = (curVal >> 1) | (newBit << (nVariables - 1));
+        length++;
 
-    h_isMaxLength = new bool[GPUProps.actualConcurrentThreads];
-    h_funcArray = new Function_0_a_bc_de[GPUProps.actualConcurrentThreads];
-
-    ret = cudaMalloc((void **) &d_isMaxLength, GPUProps.actualConcurrentThreads * sizeof(bool));
-    if (ret != cudaSuccess) {
-        throw std::runtime_error("No more memory on device for bools");
-    }
-
-    ret = cudaMalloc((void **) &d_funcArray, GPUProps.actualConcurrentThreads * sizeof(Function_0_a_bc_de));
-    if (ret != cudaSuccess) {
-        throw std::runtime_error("No more memory on device for Function_0_a_bc_de");
-    }
-
-    uint32_t enqueued = 0;
-
-    for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
-
-        for (int32_t b = 1; b <= m_nVariables - 2; b++) {
-            for (int32_t c = b + 1; c <= m_nVariables - 1; c++) {
-
-                for (int32_t d = b; d <= m_nVariables - 2; d++) {
-                    for (int32_t e = d + 1; e <= m_nVariables - 1; e++) {
-
-                        // Keep the function for later evaluation
-                        Function_0_a_bc_de func(a, b, c, d, e, m_nVariables);
-                        if (!func.isCanonicalForm()) {
-                            continue;
-                        }
-
-                        h_funcArray[enqueued++] = func;
-
-                        if (enqueued == GPUProps.actualConcurrentThreads) {
-                            send_and_report<Function_0_a_bc_de>(h_funcArray, d_funcArray, h_isMaxLength,
-                                    d_isMaxLength, enqueued, m_maxPossibleLength);
-                            enqueued = 0;
-                        }
-                    }
-                }
-            }
+        for (/* done */; curVal != 1 && length < filterValue; length++) {
+            newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
+                     bit(c, curVal) ^ bit(d, curVal) ^
+                    (bit(e, curVal) & bit(f, curVal));
+            curVal = (curVal >> 1) | (newBit << (nVariables - 1));
         }
-    }
 
-    if (enqueued != 0) {
-        send_and_report<Function_0_a_bc_de>(h_funcArray, d_funcArray, h_isMaxLength,
-                d_isMaxLength, enqueued, m_maxPossibleLength);
-    }
+        if (curVal == 1) { /* We are done */
+            d_funcArray[me].done = true;
+            d_funcArray[me].lengthSoFar = length;
+        } else { /* Some more to go */
+            d_funcArray[me].done = false;
+            d_funcArray[me].lengthSoFar = length;
+            d_funcArray[me].curVal = curVal;
+        }
 
-    cudaFree(d_funcArray);
-    cudaFree(d_isMaxLength);
-    delete [] h_isMaxLength;
-    delete [] h_funcArray;
+    }
 }
 
 
 
 
-/***********************************************************************
- **************** For x0 + xa + xb + xc + xd + xe.xf *******************
- ***********************************************************************/
-
-    FuncGenerator_0_a_b_c_d_ef::FuncGenerator_0_a_b_c_d_ef(uint32_t nVariables)
-: m_nVariables(nVariables), m_maxPossibleLength((1 << m_nVariables) - 1)
-{}
-
-
-FuncGenerator_0_a_b_c_d_ef::~FuncGenerator_0_a_b_c_d_ef()
-{}
-
-
-void FuncGenerator_0_a_b_c_d_ef::reportMaxFunctions()
+/************************************ Functions generation **************************************/
+template <>
+void generate_functions<Function_0_a_b_c_d_ef>(uint32_t nVariables, std::vector<Function_0_a_b_c_d_ef>& funcArray)
 {
-    getGPUProperties();
+    for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
+        for (uint8_t b = a + 1; b <= nVariables - 3; b++) { /* -3 to leave room for c and d */
+            for (uint8_t c = b + 1; c <= nVariables - 2; c++) { /* -2 to leave room for d */
+                for (uint8_t d = c + 1; d <= nVariables - 1; d++) {
 
-    cudaError_t ret;
-
-    Function_0_a_b_c_d_ef *h_funcArray;
-    Function_0_a_b_c_d_ef *d_funcArray;
-    bool *d_isMaxLength;
-    bool *h_isMaxLength;
-
-    h_isMaxLength = new bool[GPUProps.actualConcurrentThreads];
-    h_funcArray = new Function_0_a_b_c_d_ef[GPUProps.actualConcurrentThreads];
-
-    ret = cudaMalloc((void **) &d_isMaxLength, GPUProps.actualConcurrentThreads * sizeof(bool));
-    if (ret != cudaSuccess) {
-        throw std::runtime_error("No more memory on device for bools");
-    }
-
-    ret = cudaMalloc((void **) &d_funcArray, GPUProps.actualConcurrentThreads * sizeof(Function_0_a_b_c_d_ef));
-    if (ret != cudaSuccess) {
-        throw std::runtime_error("No more memory on device for Function_0_a_b_c_d_ef");
-    }
-
-    uint32_t enqueued = 0;
-
-    for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
-        for (int32_t b = a + 1; b <= m_nVariables - 3; b++) { /* -3 to leave room for c and d */
-            for (int32_t c = b + 1; c <= m_nVariables - 2; c++) { /* -2 to leave room for d */
-                for (int32_t d = c + 1; d <= m_nVariables - 1; d++) {
-
-                    for (int32_t e = 1; e <= m_nVariables - 2; e++) {
-                        for (int32_t f = e + 1; f <= m_nVariables - 1; f++) {
+                    for (uint8_t e = 1; e <= nVariables - 2; e++) {
+                        for (uint8_t f = e + 1; f <= nVariables - 1; f++) {
 
                             // Keep the function for later evaluation
-                            Function_0_a_b_c_d_ef func(a, b, c, d, e, f, m_nVariables);
-                            if (!func.isCanonicalForm()) {
+                            struct Function_0_a_b_c_d_ef func = {a, b, c, d, e, f, nVariables, 1, 0, false};
+
+                            if (!canonical<Function_0_a_b_c_d_ef>(func)) {
                                 continue;
                             }
 
-                            h_funcArray[enqueued++] = func;
-
-                            if (enqueued == GPUProps.actualConcurrentThreads) {
-                                send_and_report<Function_0_a_b_c_d_ef>(h_funcArray, d_funcArray, h_isMaxLength,
-                                        d_isMaxLength, enqueued, m_maxPossibleLength);
-                                enqueued = 0;
-                            }
-
+                            funcArray.push_back(func);
                         }
                     }
                 }
             }
         }
     }
-
-    if (enqueued != 0) {
-        send_and_report<Function_0_a_b_c_d_ef>(h_funcArray, d_funcArray, h_isMaxLength,
-                d_isMaxLength, enqueued, m_maxPossibleLength);
-    }
-
-    cudaFree(d_funcArray);
-    cudaFree(d_isMaxLength);
-    delete [] h_isMaxLength;
-    delete [] h_funcArray;
 }
 
 
@@ -874,89 +818,244 @@ void FuncGenerator_0_a_b_c_d_ef::reportMaxFunctions()
 
 
 
-/***********************************************************************
- **************** For x0 + xa + xb + xc.xd.xe *******************
- ***********************************************************************/
 
-    FuncGenerator_0_a_b_cde::FuncGenerator_0_a_b_cde(uint32_t nVariables)
-: m_nVariables(nVariables), m_maxPossibleLength((1 << m_nVariables) - 1)
-{}
+///////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////// Form x0 + a + b + cde ///////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 
-FuncGenerator_0_a_b_cde::~FuncGenerator_0_a_b_cde()
-{}
+struct __align__(16) Function_0_a_b_cde {
+    uint8_t a;
+    uint8_t b;
+    uint8_t c;
+    uint8_t d;
+    uint8_t e;
+    uint8_t nVariables;
+
+    uint32_t curVal;
+    uint32_t lengthSoFar;
+    bool done;
+};
 
 
-void FuncGenerator_0_a_b_cde::reportMaxFunctions()
+template <>
+void print_func<Function_0_a_b_cde> (Function_0_a_b_cde& func)
 {
-    getGPUProperties();
+    std::cout << (uint32_t) func.nVariables << " variables: "
+              << 0 << "," << (uint32_t) func.a  << "," << (uint32_t) func.b
+              << ",(" << (uint32_t) func.c << "," << (uint32_t) func.d << "," << (uint32_t) func.e << ")"
+              << std::endl;
+}
 
-    cudaError_t ret;
 
-    Function_0_a_b_cde *h_funcArray;
-    Function_0_a_b_cde *d_funcArray;
-    bool *d_isMaxLength;
-    bool *h_isMaxLength;
 
-    h_isMaxLength = new bool[GPUProps.actualConcurrentThreads];
-    h_funcArray = new Function_0_a_b_cde[GPUProps.actualConcurrentThreads];
+template <>
+bool smaller_or_equal<Function_0_a_b_cde>(Function_0_a_b_cde& one, Function_0_a_b_cde& other)
+{
+    if (one.a < other.a)
+        return true;
 
-    ret = cudaMalloc((void **) &d_isMaxLength, GPUProps.actualConcurrentThreads * sizeof(bool));
-    if (ret != cudaSuccess) {
-        throw std::runtime_error("No more memory on device for bools");
+    if (one.a == other.a && one.b < other.b)
+        return true;
+
+    if (one.a == other.a && one.b == other.b && one.c < other.c)
+        return true;
+
+    if (one.a == other.a && one.b == other.b && one.c == other.c && one.d < other.d)
+        return true;
+
+    if (one.a == other.a && one.b == other.b && one.c == other.c && one.d == other.d && one.e <= other.e)
+        return true;
+
+    return false;
+}
+
+
+template <>
+bool canonical<Function_0_a_b_cde>(Function_0_a_b_cde& func)
+{
+    int32_t ar = func.nVariables - func.a;
+    int32_t br = func.nVariables - func.b;
+    int32_t cr = func.nVariables - func.c;
+    int32_t dr = func.nVariables - func.d;
+    int32_t er = func.nVariables - func.e;
+
+    Function_0_a_b_cde other = {br, ar, er, dr, cr, func.nVariables};
+    return smaller_or_equal(func, other);
+}
+
+
+template <>
+__global__ void kernel_to_the_end<Function_0_a_b_cde> (struct Function_0_a_b_cde *d_funcArray,
+                                                      uint32_t nQueued, uint32_t maxPossibleLength)
+{
+    // Get my position
+    uint32_t me = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (me < nQueued) {
+        struct Function_0_a_b_cde func = d_funcArray[me];
+
+        uint8_t a = func.a;
+        uint8_t b = func.b;
+        uint8_t c = func.c;
+        uint8_t d = func.d;
+        uint8_t e = func.e;
+        uint8_t nVariables = func.nVariables;
+
+        uint32_t curVal = func.curVal;
+        uint32_t length = func.lengthSoFar;
+        uint32_t newBit = 0;
+
+        do {
+            newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
+                    (bit(c, curVal) & bit(d, curVal) & bit(e, curVal));
+            curVal = (curVal >> 1) | (newBit << (nVariables - 1));
+
+            length++;
+        } while (curVal != 1);
+
+        d_funcArray[me].lengthSoFar = length;
+        d_funcArray[me].done = true;
     }
+}
 
-    ret = cudaMalloc((void **) &d_funcArray, GPUProps.actualConcurrentThreads * sizeof(Function_0_a_b_cde));
-    if (ret != cudaSuccess) {
-        throw std::runtime_error("No more memory on device for Function_0_a_b_cde");
+
+
+
+template <>
+__global__ void kernel_filter<Function_0_a_b_cde>(Function_0_a_b_cde *d_funcArray,
+                                                 uint32_t nQueued, uint32_t filterValue)
+{
+    // Get my position
+    uint32_t me = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (me < nQueued) {
+        // Copy things into registers
+        struct Function_0_a_b_cde func = d_funcArray[me];
+
+        uint8_t a = func.a;
+        uint8_t b = func.b;
+        uint8_t c = func.c;
+        uint8_t d = func.d;
+        uint8_t e = func.e;
+        uint8_t nVariables = func.nVariables;
+
+        uint32_t curVal = func.curVal;
+        uint32_t length = func.lengthSoFar;
+
+        uint32_t newBit = 0;
+
+        // Unroll the first iteration to put curVal != 1 in the for condition
+        newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
+                (bit(c, curVal) & bit(d, curVal) & bit(e, curVal));
+        curVal = (curVal >> 1) | (newBit << (nVariables - 1));
+        length++;
+
+        for (/* done */; curVal != 1 && length < filterValue; length++) {
+            newBit = bit(0, curVal) ^ bit(a, curVal) ^ bit(b, curVal) ^
+                    (bit(c, curVal) & bit(d, curVal) & bit(e, curVal));
+            curVal = (curVal >> 1) | (newBit << (nVariables - 1));
+        }
+
+        if (curVal == 1) { /* We are done */
+            d_funcArray[me].done = true;
+            d_funcArray[me].lengthSoFar = length;
+        } else { /* Some more to go */
+            d_funcArray[me].done = false;
+            d_funcArray[me].lengthSoFar = length;
+            d_funcArray[me].curVal = curVal;
+        }
+
     }
-
-    uint32_t enqueued = 0;
-
-    for (int32_t a = 1; a <= (m_nVariables + 1) / 2; a++) {
-        for (int32_t b = a + 1; b <= m_nVariables - 1; b++) {
+}
 
 
-            for (int32_t c = 1; c <= m_nVariables - 3; c++) { /* -3 to leave room for d and e */
-                for (int32_t d = c + 1; d <= m_nVariables - 2; d++) {
-                    for (int32_t e = d + 1; e <= m_nVariables - 1; e++) {
+
+
+/************************************ Functions generation **************************************/
+template <>
+void generate_functions<Function_0_a_b_cde>(uint32_t nVariables, std::vector<Function_0_a_b_cde>& funcArray)
+{
+    for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
+        for (uint8_t b = a + 1; b <= nVariables - 1; b++) {
+
+            for (uint8_t c = 1; c <= nVariables - 3; c++) { /* -3 to leave room for d and e */
+                for (uint8_t d = c + 1; d <= nVariables - 2; d++) {
+                    for (uint8_t e = d + 1; e <= nVariables - 1; e++) {
 
                         // Keep the function for later evaluation
-                        Function_0_a_b_cde func(a, b, c, d, e, m_nVariables);
-                        if (!func.isCanonicalForm()) {
+                        struct Function_0_a_b_cde func = {a, b, c, d, e, nVariables, 1, 0, false};
+
+                        if (!canonical<Function_0_a_b_cde>(func)) {
                             continue;
                         }
 
-                        h_funcArray[enqueued++] = func;
-
-                        if (enqueued == GPUProps.actualConcurrentThreads) {
-                            send_and_report<Function_0_a_b_cde>(h_funcArray, d_funcArray, h_isMaxLength,
-                                    d_isMaxLength, enqueued, m_maxPossibleLength);
-                            enqueued = 0;
-                        }
-
+                        funcArray.push_back(func);
                     }
                 }
             }
         }
     }
-
-    if (enqueued != 0) {
-        send_and_report<Function_0_a_b_cde>(h_funcArray, d_funcArray, h_isMaxLength,
-                                            d_isMaxLength, enqueued, m_maxPossibleLength);
-    }
-
-    cudaFree(d_funcArray);
-    cudaFree(d_isMaxLength);
-    delete [] h_isMaxLength;
-    delete [] h_funcArray;
 }
-#endif
+
+
+
+
+/* 
+ * Command-line option
+ */
+static const struct option longOpts[] = {
+        {"n-vars", required_argument, NULL, 'n'},
+        {"func-kind", required_argument, NULL, 'k'},
+};
+
+const char *shortOpts = "nk";
+
+struct __globalOptions {
+        uint32_t nVariables;
+        std::string funcKind;
+} globalOptions;
 
 
 int main(int argc, char *argv[])
 {
-    report<Function_0_a_b_cd>(atoi(argv[1]));
-    report<Function_0_a_bc_de>(atoi(argv[1]));
+    globalOptions.nVariables = 0;
+    globalOptions.funcKind = "";
+
+    int longIndex;
+
+    // Parse program options
+    int opt = getopt_long(argc, argv, shortOpts, longOpts, &longIndex);
+    while (opt != -1) {
+        switch (opt) {
+            case 'n':
+                globalOptions.nVariables = strtoul(optarg, NULL, 10);
+                if (errno == ERANGE) {
+                    std::cerr << "Could not parse " << optarg << " as a number" << std::endl;
+                    exit(1);
+                }
+                break;
+            case 'k':
+                globalOptions.funcKind = std::string(optarg);
+                break;
+        }
+
+        // Get next option
+        opt = getopt_long(argc, argv, shortOpts, longOpts, &longIndex);
+    }
+
+    // Filter on the required type of function to test
+    if (globalOptions.funcKind == "0_a_b_cd") {
+        report<Function_0_a_b_cd>(globalOptions.nVariables);
+    } else if (globalOptions.funcKind == "0_a_bc_de") {
+        report<Function_0_a_bc_de>(globalOptions.nVariables);
+    } else if (globalOptions.funcKind == "0_a_b_c_d_ef") {
+        report<Function_0_a_b_c_d_ef>(globalOptions.nVariables);
+    } else if (globalOptions.funcKind == "0_a_b_cde") {
+        report<Function_0_a_b_cde>(globalOptions.nVariables);
+    } else {
+        std::cerr << "Function kind " << globalOptions.funcKind << " not recognized" << std::endl;
+    }
+
     return 0;
 }
