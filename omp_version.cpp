@@ -4,6 +4,8 @@
 #include <cstdlib>
 
 #include <stdint.h>
+#include <getopt.h>
+#include <errno.h>
 
 
 #define FUNCS_PER_KERNEL (1 << 20)
@@ -490,16 +492,67 @@ void report<Function_0_a_b_cde>(uint8_t nVariables)
 
 
 
+/*********************** Main and option-parsing related stuff **************************/
+
+
+/* 
+ * Command-line option
+ */
+static const struct option longOpts[] = {
+        {"n-vars", required_argument, NULL, 'n'},
+        {"func-kind", required_argument, NULL, 'k'},
+};
+
+const char *shortOpts = "nk";
+
+struct __globalOptions {
+        uint32_t nVariables;
+        std::string funcKind;
+} globalOptions;
+
 
 int main(int argc, char *argv[])
 {
+        globalOptions.nVariables = 0;
+        globalOptions.funcKind = "";
+
+        int longIndex;
+
+        // Parse program options
+        int opt = getopt_long(argc, argv, shortOpts, longOpts, &longIndex);
+        while (opt != -1) {
+                switch (opt) {
+                        case 'n':
+                                globalOptions.nVariables = strtoul(optarg, NULL, 10);
+                                if (errno == ERANGE) {
+                                        std::cerr << "Could not parse " << optarg << " as a number" << std::endl;
+                                        exit(1);
+                                }
+                                break;
+                        case 'k':
+                                globalOptions.funcKind = std::string(optarg);
+                                break;
+                }
+
+                // Get next option
+                opt = getopt_long(argc, argv, shortOpts, longOpts, &longIndex);
+        }
+
 #pragma omp parallel
 #pragma omp single
         {
-                report<Function_0_a_b_cd>(atoi(argv[1]));
-                report<Function_0_a_bc_de>(atoi(argv[1]));
-                report<Function_0_a_b_c_d_ef>(atoi(argv[1]));
-                report<Function_0_a_b_cde>(atoi(argv[1]));
+                // Filter on the required type of function to test
+                if (globalOptions.funcKind == "0_a_b_cd") {
+                        report<Function_0_a_b_cd>(globalOptions.nVariables);
+                } else if (globalOptions.funcKind == "0_a_bc_de") {
+                        report<Function_0_a_bc_de>(globalOptions.nVariables);
+                } else if (globalOptions.funcKind == "0_a_b_c_d_ef") {
+                        report<Function_0_a_b_c_d_ef>(globalOptions.nVariables);
+                } else if (globalOptions.funcKind == "0_a_b_c_d_ef") {
+                        report<Function_0_a_b_cde>(globalOptions.nVariables);
+                } else {
+                        std::cerr << "Function kind " << globalOptions.funcKind << " not recognized" << std::endl;
+                }
         }
 
         return 0;

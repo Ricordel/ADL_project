@@ -1,75 +1,23 @@
-BE_SURE_BIN_EXISTS:=$(shell mkdir -p bin)
+# Compilation is fast, don't bother with dependancies, recompile everything
+# everytime
 
-CUDACC = nvcc
-CUDAFLAGS = -c
-
-# Compiler options
-ifndef WITHOUT_CPP11
-CXXFLAGS = -c -O2 -Wall -Wextra -Isrc -DNDEBUG -pedantic -fopenmp -std=c++11 -flto $(OPTFLAGS)
-LDFLAGS = -lgomp -flto
-else
-CXXFLAGS = -c -O2 -Wall -Wextra -Isrc -DNDEBUG -pedantic -fopenmp -DWITHOUT_CPP11 $(OPTFLAGS)
-LDFLAGS = -lgomp
-endif
-
-# link with the current g++ too
-LD = $(CXX)
+CXX = g++
+CXXFLAGS = -Wall -Wextra -O3 -fopenmp -g
 
 
-# Directories
-BIN = bin
-SRCDIR = src
+all: omp_version cuda_version print_function
 
-
-ifndef WITHOUT_CPP11
-ALL=find_functions_omp find_functions_cuda print_function
-else
-ALL=find_functions_omp
-endif
-
-all: $(ALL)
-
-
-# Targets
-find_functions_omp: $(BIN)/Function.o $(BIN)/FuncGenerator_omp.o $(BIN)/find_functions.o
-	$(LD) $(LDFLAGS) $^ -o $@
-
-<<<<<<< Updated upstream
-find_functions_cuda: CXXFLAGS += -D__CUDA
-find_functions_cuda: $(BIN)/Function.o $(BIN)/FuncGenerator_cuda.o $(BIN)/find_functions.o
-	$(LD) $(LDFLAGS) -lcudart $^ -o $@
-=======
-find_functions_cuda: depends buildrepo $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_cuda.o $(OBJDIR)/find_functions.o
-	$(LD) $(LDFLAGS) -lcudart $(COMMON_OBJS) $(OBJDIR)/FuncGenerator_cuda.o $(OBJDIR)/find_functions.o -o $@
-#XXX test
-#find_functions_cuda: depends buildrepo $(SRCDIR)/FuncGenerator_cuda.cu $(SRCDIR)/Function.cpp $(SRCDIR)/find_functions.cpp
-	#$(CUDACC) $(SRCDIR)/FuncGenerator_cuda.cu $(SRCDIR)/Function.cpp $(SRCDIR)/find_functions.cpp -o $@
->>>>>>> Stashed changes
-
-print_function: $(BIN)/Function.o $(BIN)/print_function.o
-	$(LD) $(LDFLAGS) $^ -o $@
-
-$(BIN)/%.o: $(SRCDIR)/%.cpp
+omp_version: omp_version.cpp
 	$(CXX) $(CXXFLAGS) $< -o $@
-	
-$(BIN)/%.o: $(SRCDIR)/%.cu
-	$(CUDACC) $(CUDAFLAGS) $< -o $@
-	
 
-# dev is all + debug options: -g, -O0, -DDEBUG
-#XXX I get weird errors of undefined operator= in basic_string when compiling in O0
-dev: CXXFLAGS = -c -O1 -g -Wall -Wextra -Isrc -std=c++11 -pedantic $(OPTFLAGS)
-dev: CPPFLAGS += -DDEBUG
-dev: all
+cuda_version: cuda_version.cu
+	nvcc -lcudart -o cuda_version cuda_version.cu
 
-
+print_function: Function.cpp Function.hpp print_function.cpp
+	$(CXX) $(CXXFLAGS) -std=c++11 print_function.cpp Function.cpp -o $@
 
 clean:
-	rm -f find_functions_omp find_functions_cuda print_function $(BIN)/*.o
+	rm -f omp_version cuda_version print_function
 
 
-tags:
-	ctags -R
-
-
-.PHONY: clean tags
+.PHONY: clean omp_version cuda_version

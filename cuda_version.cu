@@ -9,7 +9,7 @@
 #include "dbg.h"
 
 
-#define FUNCS_PER_KERNEL (1 << 25)
+#define FUNCS_PER_KERNEL (1 << 12)
 
 
 
@@ -56,7 +56,7 @@ void getGPUProperties()
  **********************************************************************************************/
 
 
-struct Function_0_a_b_cd {
+struct __align__(16) Function_0_a_b_cd {
     uint8_t a;
     uint8_t b;
     uint8_t c;
@@ -108,8 +108,8 @@ __global__ void kernel_0_a_b_cd(struct Function_0_a_b_cd *d_funcArray,
     uint32_t me = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (me < nQueued) {
-        // Copy things into registers
         struct Function_0_a_b_cd func = d_funcArray[me];
+
         uint8_t a = func.a;
         uint8_t b = func.b;
         uint8_t c = func.c;
@@ -146,6 +146,7 @@ __global__ void kernel_0_a_b_cd_filter(struct Function_0_a_b_cd *d_funcArray,
     if (me < nQueued) {
         // Copy things into registers
         struct Function_0_a_b_cd func = d_funcArray[me];
+
         uint8_t a = func.a;
         uint8_t b = func.b;
         uint8_t c = func.c;
@@ -199,6 +200,8 @@ void sendAndFilterTo_0_a_b_cd(std::vector<struct Function_0_a_b_cd>& h_funcArray
     nBlocks = nQueued / GPUProps.maxThreadsPerBlock + (nQueued % GPUProps.maxThreadsPerBlock == 0 ? 0 : 1);
     nThreadsPerBlock = (nBlocks == 1) ? nQueued : GPUProps.maxThreadsPerBlock;
 
+    /*std::cout << "sending " << nQueued << std::endl;*/
+
     kernel_0_a_b_cd_filter<<< nBlocks, nThreadsPerBlock >>>(d_funcArray.mem, nQueued, filterValue);
 
     cudaMemcpyWrapped<struct Function_0_a_b_cd>(&h_funcArray[0], d_funcArray.mem, nQueued, cudaMemcpyDeviceToHost);
@@ -207,6 +210,11 @@ void sendAndFilterTo_0_a_b_cd(std::vector<struct Function_0_a_b_cd>& h_funcArray
         if (!h_funcArray[i].done) {
             h_remainingFuncArray.push_back(h_funcArray[i]);
         }
+#if 0
+        else {
+            std::cout << h_funcArray[i].lengthSoFar << std::endl;
+        }
+#endif
     }
 }
 
@@ -225,21 +233,75 @@ void sendAndReport_0_a_b_cd(std::vector<struct Function_0_a_b_cd>& h_funcArray,
     nBlocks = nQueued / GPUProps.maxThreadsPerBlock + (nQueued % GPUProps.maxThreadsPerBlock == 0 ? 0 : 1);
     nThreadsPerBlock = (nBlocks == 1) ? nQueued : GPUProps.maxThreadsPerBlock;
 
+    /*std::cout << "sending " << nQueued << std::endl;*/
+
     kernel_0_a_b_cd <<< nBlocks, nThreadsPerBlock >>>(d_funcArray.mem, nQueued, maxPossibleLength);
 
     cudaMemcpyWrapped<Function_0_a_b_cd>(&h_funcArray[0], d_funcArray.mem, nQueued, cudaMemcpyDeviceToHost);
 
     for (int i = 0; i < nQueued; i++) {
+            /*std::cout << h_funcArray[i].lengthSoFar << std::endl;*/
+#if 1
         if (h_funcArray[i].lengthSoFar == maxPossibleLength) {
-            std::cout << "i: "<< i << std::endl;
             std::cout << "0," << (uint32_t)h_funcArray[i].a << "," << (uint32_t)h_funcArray[i].b
                       << ",(" << (uint32_t)h_funcArray[i].c << "," << (uint32_t)h_funcArray[i].d << ")"
                       << std::endl;
         }
+#endif
     }
 }
 
 
+
+
+
+static inline void filter_remaining(std::vector<Function_0_a_b_cd>& in, std::vector<Function_0_a_b_cd>& out, 
+                      CudaMallocWrapper<Function_0_a_b_cd>& d_funcArray,
+                      uint32_t filterValue)
+{
+    uint32_t total_sent = 0;
+    std::vector<Function_0_a_b_cd> toSend;
+    for (int i = 0; i < in.size(); i++) {
+        toSend.push_back(in[i]);
+        if (toSend.size() == FUNCS_PER_KERNEL) {
+            total_sent += FUNCS_PER_KERNEL;
+            std::cerr << "Filter to " << filterValue << ": " << total_sent << "/" << in.size() << std::endl;
+            sendAndFilterTo_0_a_b_cd(toSend, out, d_funcArray, filterValue);
+            toSend.clear();
+        }
+    }
+
+    if (toSend.size() != 0) {
+            total_sent += toSend.size();
+            std::cerr << "Filter to " << filterValue << ": " << total_sent << "/" << in.size() << std::endl;
+            sendAndFilterTo_0_a_b_cd(toSend, out, d_funcArray, filterValue);
+    }
+}
+
+
+static inline void to_the_end(std::vector<Function_0_a_b_cd>& h_funcArray,
+                CudaMallocWrapper<Function_0_a_b_cd>& d_funcArray,
+                uint32_t maxPossibleLength)
+{
+    uint32_t total_sent = 0;
+    std::vector<Function_0_a_b_cd> toSend;
+    // And now go to the end
+    for (int i = 0; i < h_funcArray.size(); i++) {
+        toSend.push_back(h_funcArray[i]);
+        if (i == FUNCS_PER_KERNEL) {
+            total_sent += FUNCS_PER_KERNEL;
+            std::cerr << "To the end: " << total_sent << "/" << h_funcArray.size() << std::endl;
+            sendAndReport_0_a_b_cd(toSend, d_funcArray, maxPossibleLength);
+            toSend.clear();
+        }
+    }
+
+    if (toSend.size() != 0) {
+            total_sent += FUNCS_PER_KERNEL;
+            std::cerr << "To the end: " << total_sent << "/" << h_funcArray.size() << std::endl;
+            sendAndReport_0_a_b_cd(toSend, d_funcArray, maxPossibleLength);
+    }
+}
 
 
 /************************************ Functions generation **************************************/
@@ -250,8 +312,8 @@ void report_0_a_b_cd(uint32_t nVariables)
     //XXX Carefull with nVariables 32.
     uint32_t maxPossibleLength = (1 << nVariables) - 1;
 
-    std::vector<Function_0_a_b_cd> h_funcArray;
-    std::vector<Function_0_a_b_cd> h_remainingFuncArray;
+    std::vector<Function_0_a_b_cd> h_funcArray_a;
+    std::vector<Function_0_a_b_cd> h_funcArray_b;
 
     /* Allocate memory for arrays on device */
     CudaMallocWrapper<Function_0_a_b_cd> d_funcArray(FUNCS_PER_KERNEL);
@@ -271,66 +333,94 @@ void report_0_a_b_cd(uint32_t nVariables)
                     }
 
 
-                    h_funcArray.push_back(func);
+                    h_funcArray_a.push_back(func);
 
+#if 0
                     if (h_funcArray.size() == FUNCS_PER_KERNEL) {
-                        sendAndFilterTo_0_a_b_cd(h_funcArray, h_remainingFuncArray, d_funcArray, maxPossibleLength / 9);
-            /*sendAndReport_0_a_b_cd(h_funcArray, d_funcArray, maxPossibleLength);*/
+                        sendAndFilterTo_0_a_b_cd(h_funcArray_a, h_funcArray_b, d_funcArray, maxPossibleLength / 1000);
+                        /*sendAndReport_0_a_b_cd(h_funcArray, d_funcArray, maxPossibleLength);*/
 
-                        h_funcArray.clear();
+                        h_funcArray_a.clear();
                     }
+#endif
                 }
             }
         }
     }
 
-    if (h_funcArray.size() != 0) {
-        sendAndFilterTo_0_a_b_cd(h_funcArray, h_remainingFuncArray, d_funcArray, maxPossibleLength / 9);
+#if 0
+    if (h_funcArray_a.size() != 0) {
+        std::cout << "out of loop: ";
+        sendAndFilterTo_0_a_b_cd(h_funcArray_a, h_funcArray_b, d_funcArray, maxPossibleLength / 1000);
             /*sendAndReport_0_a_b_cd(h_funcArray, d_funcArray, maxPossibleLength);*/
     }
-
-    //XXX continuer d'investiguer, essayer de comprendre pourquoi le 2è filtrage est TOUJOURS inutile
-    //XXX essayer avec des valeurs encore plus petites pour le premier filtrave, /3 est meilleur que /2
-    //XXX par exemple !
-    //XXX Peut-être qu'il serait plus intéressant de faire les divers filtrages sur de petites
-    //XXX valeurs, par exemple /8, /4, /2, ...
-
-#if 1
-    std::vector<Function_0_a_b_cd> h_remainingFuncArray_2;
-    //XXX utiliser le même h_remainingFuncArray n'est pas correct !
-    // And now go to the end
-    h_funcArray.clear();
-    for (int i = 0; i < h_remainingFuncArray.size(); i++) {
-        h_funcArray.push_back(h_remainingFuncArray[i]);
-        if (i == FUNCS_PER_KERNEL) {
-            sendAndFilterTo_0_a_b_cd(h_funcArray, h_remainingFuncArray_2, d_funcArray, maxPossibleLength / 3);
-            h_funcArray.clear();
-        }
-    }
-
-    if (h_funcArray.size() != 0) {
-            sendAndFilterTo_0_a_b_cd(h_funcArray, h_remainingFuncArray_2, d_funcArray, maxPossibleLength / 3);
-            h_funcArray.clear();
-    }
 #endif
 
 
-#if 1
+    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, maxPossibleLength/1000);
 
-    // And now go to the end
-    h_funcArray.clear();
-    for (int i = 0; i < h_remainingFuncArray_2.size(); i++) {
-        h_funcArray.push_back(h_remainingFuncArray_2[i]);
-        if (i == FUNCS_PER_KERNEL) {
-            sendAndReport_0_a_b_cd(h_funcArray, d_funcArray, maxPossibleLength);
-            h_funcArray.clear();
-        }
-    }
+    h_funcArray_a.clear();
+    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, maxPossibleLength/10);
 
-    if (h_funcArray.size() != 0) {
-            sendAndReport_0_a_b_cd(h_funcArray, d_funcArray, maxPossibleLength);
-    }
+    h_funcArray_b.clear();
+    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 2 * maxPossibleLength/10);
+
+    h_funcArray_a.clear();
+    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 3 * maxPossibleLength/10);
+
+    h_funcArray_b.clear();
+    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 4 * maxPossibleLength/10);
+
+    h_funcArray_a.clear();
+    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 5 * maxPossibleLength/10);
+
+    h_funcArray_b.clear();
+    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 6 * maxPossibleLength/10);
+
+    h_funcArray_a.clear();
+    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 7 * maxPossibleLength/10);
+
+    h_funcArray_b.clear();
+    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 8 * maxPossibleLength/10);
+
+    h_funcArray_a.clear();
+    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 9 * maxPossibleLength/10);
+
+
+    ///////
+#if 0
+    h_funcArray_a.clear();
+    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 10 * maxPossibleLength/20);
+
+    h_funcArray_b.clear();
+    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 11 * maxPossibleLength/20);
+
+    h_funcArray_a.clear();
+    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 12 * maxPossibleLength/20);
+
+    h_funcArray_b.clear();
+    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 13 * maxPossibleLength/20);
+
+    h_funcArray_a.clear();
+    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 14 * maxPossibleLength/20);
+
+    h_funcArray_b.clear();
+    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 15 * maxPossibleLength/20);
+
+    h_funcArray_a.clear();
+    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 16 * maxPossibleLength/20);
+
+    h_funcArray_b.clear();
+    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 17 * maxPossibleLength/20);
+
+    h_funcArray_a.clear();
+    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 18 * maxPossibleLength/20);
+
+    h_funcArray_b.clear();
+    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 19 * maxPossibleLength/20);
 #endif
+
+    to_the_end(h_funcArray_a, d_funcArray, maxPossibleLength);
 
 }
 
