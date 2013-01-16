@@ -9,7 +9,7 @@
 #include "dbg.h"
 
 
-#define FUNCS_PER_KERNEL (1 << 12)
+#define FUNCS_PER_KERNEL (1 << 16)
 
 
 
@@ -49,6 +49,135 @@ void getGPUProperties()
 
 
 
+/******************************** General template declarations *****************************/
+
+/***** The following templates will need to be specialized for each type of functions ******/
+
+template <typename FuncType>
+bool smaller_or_equal(FuncType& one, FuncType& other);
+
+template <typename FuncType>
+bool canonical(FuncType& func);
+
+
+template <typename FuncType>
+__global__ void kernel_to_the_end(FuncType *d_funcArray,
+                                  uint32_t nQueued, uint32_t maxPossibleLength);
+
+template <typename FuncType>
+__global__ void kernel_filter(FuncType *d_funcArray,
+                              uint32_t nQueued, uint32_t filterValue);
+
+
+template <typename FuncType> void print_func(FuncType& func);
+
+template <typename FuncType> void report(uint32_t nVariables);
+
+/***** The following templates are generic ******/
+
+
+template <typename FuncType>
+void sendAndFilterTo(std::vector<FuncType>& h_funcArray,
+                     std::vector<FuncType>& h_remainingFuncArray,
+                     CudaMallocWrapper<FuncType>& d_funcArray,
+                     uint32_t filterValue)
+{
+    uint32_t nBlocks, nThreadsPerBlock, nQueued;
+    nQueued = h_funcArray.size();
+
+    cudaMemcpyWrapped<FuncType>(d_funcArray.mem, &h_funcArray[0], nQueued, cudaMemcpyHostToDevice);
+
+    nBlocks = nQueued / GPUProps.maxThreadsPerBlock + (nQueued % GPUProps.maxThreadsPerBlock == 0 ? 0 : 1);
+    nThreadsPerBlock = (nBlocks == 1) ? nQueued : GPUProps.maxThreadsPerBlock;
+
+    kernel_filter<FuncType> <<< nBlocks, nThreadsPerBlock >>> (d_funcArray.mem, nQueued, filterValue);
+
+    cudaMemcpyWrapped<FuncType>(&h_funcArray[0], d_funcArray.mem, nQueued, cudaMemcpyDeviceToHost);
+
+    for (int i = 0; i < nQueued; i++) {
+        if (!h_funcArray[i].done) {
+            h_remainingFuncArray.push_back(h_funcArray[i]);
+        }
+    }
+}
+
+
+template <typename FuncType>
+void sendAndReport(std::vector<FuncType>& h_funcArray,
+                   CudaMallocWrapper<FuncType>& d_funcArray,
+                   uint32_t maxPossibleLength)
+{
+    uint32_t nBlocks, nThreadsPerBlock, nQueued;
+    nQueued = h_funcArray.size();
+
+    cudaMemcpyWrapped<FuncType>(d_funcArray.mem, &h_funcArray[0], nQueued, cudaMemcpyHostToDevice);
+
+    nBlocks = nQueued / GPUProps.maxThreadsPerBlock + (nQueued % GPUProps.maxThreadsPerBlock == 0 ? 0 : 1);
+    nThreadsPerBlock = (nBlocks == 1) ? nQueued : GPUProps.maxThreadsPerBlock;
+
+    kernel_to_the_end<FuncType> <<< nBlocks, nThreadsPerBlock >>>(d_funcArray.mem, nQueued, maxPossibleLength);
+
+    cudaMemcpyWrapped<FuncType>(&h_funcArray[0], d_funcArray.mem, nQueued, cudaMemcpyDeviceToHost);
+
+    for (int i = 0; i < nQueued; i++) {
+        if (h_funcArray[i].lengthSoFar == maxPossibleLength) {
+            print_func<FuncType>(h_funcArray[i]);
+        }
+    }
+}
+
+
+template <typename FuncType>
+inline void filter_remaining(std::vector<FuncType>& in, std::vector<FuncType>& out, 
+                             CudaMallocWrapper<FuncType>& d_funcArray,
+                             uint32_t filterValue)
+{
+    uint32_t total_sent = 0;
+    std::vector<FuncType> toSend;
+    for (int i = 0; i < in.size(); i++) {
+        toSend.push_back(in[i]);
+        if (toSend.size() == FUNCS_PER_KERNEL) {
+            total_sent += FUNCS_PER_KERNEL;
+            std::cerr << "Filter to " << filterValue << ": " << total_sent << "/" << in.size() << std::endl;
+            sendAndFilterTo<FuncType>(toSend, out, d_funcArray, filterValue);
+            toSend.clear();
+        }
+    }
+
+    if (toSend.size() != 0) {
+            total_sent += toSend.size();
+            std::cerr << "Filter to " << filterValue << ": " << total_sent << "/" << in.size() << std::endl;
+            sendAndFilterTo<FuncType>(toSend, out, d_funcArray, filterValue);
+    }
+}
+
+
+template <typename FuncType>
+static inline void to_the_end(std::vector<FuncType>& h_funcArray,
+                              CudaMallocWrapper<FuncType>& d_funcArray,
+                              uint32_t maxPossibleLength)
+{
+    uint32_t total_sent = 0;
+    std::vector<FuncType> toSend;
+    // And now go to the end
+    for (int i = 0; i < h_funcArray.size(); i++) {
+        toSend.push_back(h_funcArray[i]);
+        if (i == FUNCS_PER_KERNEL) {
+            total_sent += FUNCS_PER_KERNEL;
+            std::cerr << "To the end: " << total_sent << "/" << h_funcArray.size() << std::endl;
+            sendAndReport<FuncType>(toSend, d_funcArray, maxPossibleLength);
+            toSend.clear();
+        }
+    }
+
+    if (toSend.size() != 0) {
+            total_sent += toSend.size();
+            std::cerr << "To the end: " << total_sent << "/" << h_funcArray.size() << std::endl;
+            sendAndReport<FuncType>(toSend, d_funcArray, maxPossibleLength);
+    }
+}
+
+
 
 
 /**********************************************************************************************
@@ -69,7 +198,18 @@ struct __align__(16) Function_0_a_b_cd {
 };
 
 
-bool smaller_or_equal_0_a_b_cd(struct Function_0_a_b_cd& one, struct Function_0_a_b_cd& other)
+template <>
+void print_func<Function_0_a_b_cd> (Function_0_a_b_cd& func)
+{
+    std::cout << "0," << (uint32_t)func.a << "," << (uint32_t)func.b
+              << ",(" << (uint32_t)func.c << "," << (uint32_t)func.d << ")"
+              << std::endl;
+}
+
+
+
+template <>
+bool smaller_or_equal<Function_0_a_b_cd>(Function_0_a_b_cd& one, Function_0_a_b_cd& other)
 {
     if (one.a < other.a)
         return true;
@@ -86,7 +226,9 @@ bool smaller_or_equal_0_a_b_cd(struct Function_0_a_b_cd& one, struct Function_0_
     return false;
 }
 
-bool canonical_0_a_b_cd(struct Function_0_a_b_cd& func)
+
+template <>
+bool canonical<Function_0_a_b_cd>(Function_0_a_b_cd& func)
 {
     int32_t ar = func.nVariables - func.a;
     int32_t br = func.nVariables - func.b;
@@ -94,15 +236,16 @@ bool canonical_0_a_b_cd(struct Function_0_a_b_cd& func)
     int32_t dr = func.nVariables - func.d;
 
     struct Function_0_a_b_cd other = {br, ar, dr, cr, func.nVariables};
-    return smaller_or_equal_0_a_b_cd(func, other);
+    return smaller_or_equal<Function_0_a_b_cd>(func, other);
 }
 
 
 #define bit(nBit, val) (((val) >> (nBit)) & 1)
 
 
-__global__ void kernel_0_a_b_cd(struct Function_0_a_b_cd *d_funcArray,
-                                uint32_t nQueued, uint32_t maxPossibleLength)
+template <>
+__global__ void kernel_to_the_end<Function_0_a_b_cd> (struct Function_0_a_b_cd *d_funcArray,
+                                                      uint32_t nQueued, uint32_t maxPossibleLength)
 {
     // Get my position
     uint32_t me = blockIdx.x * blockDim.x + threadIdx.x;
@@ -137,8 +280,9 @@ __global__ void kernel_0_a_b_cd(struct Function_0_a_b_cd *d_funcArray,
 
 
 
-__global__ void kernel_0_a_b_cd_filter(struct Function_0_a_b_cd *d_funcArray,
-                                       uint32_t nQueued, uint32_t filterValue)
+template <>
+__global__ void kernel_filter<Function_0_a_b_cd>(Function_0_a_b_cd *d_funcArray,
+                                                 uint32_t nQueued, uint32_t filterValue)
 {
     // Get my position
     uint32_t me = blockIdx.x * blockDim.x + threadIdx.x;
@@ -187,6 +331,7 @@ __global__ void kernel_0_a_b_cd_filter(struct Function_0_a_b_cd *d_funcArray,
 
 
 
+#if 0
 void sendAndFilterTo_0_a_b_cd(std::vector<struct Function_0_a_b_cd>& h_funcArray,
                               std::vector<struct Function_0_a_b_cd>& h_remainingFuncArray,
                               CudaMallocWrapper<struct Function_0_a_b_cd>& d_funcArray,
@@ -210,17 +355,14 @@ void sendAndFilterTo_0_a_b_cd(std::vector<struct Function_0_a_b_cd>& h_funcArray
         if (!h_funcArray[i].done) {
             h_remainingFuncArray.push_back(h_funcArray[i]);
         }
-#if 0
-        else {
-            std::cout << h_funcArray[i].lengthSoFar << std::endl;
-        }
-#endif
     }
 }
+#endif
 
 
 
 
+#if 0
 void sendAndReport_0_a_b_cd(std::vector<struct Function_0_a_b_cd>& h_funcArray,
                             CudaMallocWrapper<struct Function_0_a_b_cd>& d_funcArray,
                             uint32_t maxPossibleLength)
@@ -250,11 +392,13 @@ void sendAndReport_0_a_b_cd(std::vector<struct Function_0_a_b_cd>& h_funcArray,
 #endif
     }
 }
+#endif
 
 
 
 
 
+#if 0
 static inline void filter_remaining(std::vector<Function_0_a_b_cd>& in, std::vector<Function_0_a_b_cd>& out, 
                       CudaMallocWrapper<Function_0_a_b_cd>& d_funcArray,
                       uint32_t filterValue)
@@ -297,15 +441,17 @@ static inline void to_the_end(std::vector<Function_0_a_b_cd>& h_funcArray,
     }
 
     if (toSend.size() != 0) {
-            total_sent += FUNCS_PER_KERNEL;
+            total_sent += toSend.size();
             std::cerr << "To the end: " << total_sent << "/" << h_funcArray.size() << std::endl;
             sendAndReport_0_a_b_cd(toSend, d_funcArray, maxPossibleLength);
     }
 }
+#endif
 
 
 /************************************ Functions generation **************************************/
-void report_0_a_b_cd(uint32_t nVariables)
+template <>
+void report<Function_0_a_b_cd>(uint32_t nVariables)
 {
     getGPUProperties();
 
@@ -328,100 +474,48 @@ void report_0_a_b_cd(uint32_t nVariables)
                     // Keep the function for later evaluation
                     struct Function_0_a_b_cd func = {a, b, c, d, nVariables, 1, 0, false};
 
-                    if (!canonical_0_a_b_cd(func)) {
+                    if (!canonical<Function_0_a_b_cd>(func)) {
                         continue;
                     }
-
-
                     h_funcArray_a.push_back(func);
-
-#if 0
-                    if (h_funcArray.size() == FUNCS_PER_KERNEL) {
-                        sendAndFilterTo_0_a_b_cd(h_funcArray_a, h_funcArray_b, d_funcArray, maxPossibleLength / 1000);
-                        /*sendAndReport_0_a_b_cd(h_funcArray, d_funcArray, maxPossibleLength);*/
-
-                        h_funcArray_a.clear();
-                    }
-#endif
                 }
             }
         }
     }
 
-#if 0
-    if (h_funcArray_a.size() != 0) {
-        std::cout << "out of loop: ";
-        sendAndFilterTo_0_a_b_cd(h_funcArray_a, h_funcArray_b, d_funcArray, maxPossibleLength / 1000);
-            /*sendAndReport_0_a_b_cd(h_funcArray, d_funcArray, maxPossibleLength);*/
-    }
-#endif
+    // The following filtering pattern has been empirically found as being not too far from
+    // optimal, it seems.
 
-
-    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, maxPossibleLength/1000);
+    filter_remaining<Function_0_a_b_cd>(h_funcArray_a, h_funcArray_b, d_funcArray, maxPossibleLength/1000);
 
     h_funcArray_a.clear();
-    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, maxPossibleLength/10);
+    filter_remaining<Function_0_a_b_cd>(h_funcArray_b, h_funcArray_a, d_funcArray, maxPossibleLength/10);
 
     h_funcArray_b.clear();
-    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 2 * maxPossibleLength/10);
+    filter_remaining<Function_0_a_b_cd>(h_funcArray_a, h_funcArray_b, d_funcArray, 2 * maxPossibleLength/10);
 
     h_funcArray_a.clear();
-    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 3 * maxPossibleLength/10);
+    filter_remaining<Function_0_a_b_cd>(h_funcArray_b, h_funcArray_a, d_funcArray, 3 * maxPossibleLength/10);
 
     h_funcArray_b.clear();
-    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 4 * maxPossibleLength/10);
+    filter_remaining<Function_0_a_b_cd>(h_funcArray_a, h_funcArray_b, d_funcArray, 4 * maxPossibleLength/10);
 
     h_funcArray_a.clear();
-    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 5 * maxPossibleLength/10);
+    filter_remaining<Function_0_a_b_cd>(h_funcArray_b, h_funcArray_a, d_funcArray, 5 * maxPossibleLength/10);
 
     h_funcArray_b.clear();
-    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 6 * maxPossibleLength/10);
+    filter_remaining<Function_0_a_b_cd>(h_funcArray_a, h_funcArray_b, d_funcArray, 6 * maxPossibleLength/10);
 
     h_funcArray_a.clear();
-    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 7 * maxPossibleLength/10);
+    filter_remaining<Function_0_a_b_cd>(h_funcArray_b, h_funcArray_a, d_funcArray, 7 * maxPossibleLength/10);
 
     h_funcArray_b.clear();
-    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 8 * maxPossibleLength/10);
+    filter_remaining<Function_0_a_b_cd>(h_funcArray_a, h_funcArray_b, d_funcArray, 8 * maxPossibleLength/10);
 
     h_funcArray_a.clear();
     filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 9 * maxPossibleLength/10);
 
-
-    ///////
-#if 0
-    h_funcArray_a.clear();
-    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 10 * maxPossibleLength/20);
-
-    h_funcArray_b.clear();
-    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 11 * maxPossibleLength/20);
-
-    h_funcArray_a.clear();
-    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 12 * maxPossibleLength/20);
-
-    h_funcArray_b.clear();
-    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 13 * maxPossibleLength/20);
-
-    h_funcArray_a.clear();
-    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 14 * maxPossibleLength/20);
-
-    h_funcArray_b.clear();
-    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 15 * maxPossibleLength/20);
-
-    h_funcArray_a.clear();
-    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 16 * maxPossibleLength/20);
-
-    h_funcArray_b.clear();
-    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 17 * maxPossibleLength/20);
-
-    h_funcArray_a.clear();
-    filter_remaining(h_funcArray_b, h_funcArray_a, d_funcArray, 18 * maxPossibleLength/20);
-
-    h_funcArray_b.clear();
-    filter_remaining(h_funcArray_a, h_funcArray_b, d_funcArray, 19 * maxPossibleLength/20);
-#endif
-
-    to_the_end(h_funcArray_a, d_funcArray, maxPossibleLength);
-
+    to_the_end<Function_0_a_b_cd>(h_funcArray_a, d_funcArray, maxPossibleLength);
 }
 
 
@@ -771,6 +865,6 @@ void FuncGenerator_0_a_b_cde::reportMaxFunctions()
 
 int main(int argc, char *argv[])
 {
-    report_0_a_b_cd(atoi(argv[1]));
+    report<Function_0_a_b_cd>(atoi(argv[1]));
     return 0;
 }
