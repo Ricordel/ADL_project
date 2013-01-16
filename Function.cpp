@@ -1,16 +1,12 @@
+///// ATTENTION: this file must be compiled with a C++11 compliant compiler (for instance g++ >= 4.7.
+
 #include <sstream>
 #include <string>
 #include <omp.h>
 
-#ifdef WITHOUT_CPP11
-#include <cstdlib>
-#endif
-
 #include "Function.hpp"
 
 
-/* Switch for old fashioned g++ that does not support C++11 */
-#ifndef WITHOUT_CPP11
 
 #define PARSE_NUM(__var, __name, __form) \
 do { \
@@ -35,8 +31,6 @@ do { \
 } while (0)
 
 
-#endif /* ifndef WITHOUT_CPP11 */
-
 
 Function::Function(uint32_t nVariables) : m_nVariables(nVariables) {}
 
@@ -57,8 +51,6 @@ Function_0_a_b_cd::Function_0_a_b_cd(int32_t a, int32_t b, int32_t c, int32_t d,
         : Function(nVariables), m_a(a), m_b(b), m_c(c), m_d(d)
 {}
 
-
-#ifndef WITHOUT_CPP11
 
 Function_0_a_b_cd::Function_0_a_b_cd(const std::string& strRepr, uint32_t nVariables)
         throw (std::runtime_error) : Function(nVariables)
@@ -89,9 +81,8 @@ Function_0_a_b_cd::Function_0_a_b_cd(const std::string& strRepr, uint32_t nVaria
         }
 }
 
-#endif /* ifndef WITHOUT_CPP11 */
 
-
+#if 0
 Function_0_a_b_cd::Function_0_a_b_cd()
         : Function(0), m_a(0), m_b(0), m_c(0), m_d(0) {}
 
@@ -104,6 +95,7 @@ Function_0_a_b_cd::Function_0_a_b_cd(const Function_0_a_b_cd& other)
         : Function(other.m_nVariables),
           m_a(other.m_a), m_b(other.m_b), m_c(other.m_c), m_d(other.m_d)
 {}
+#endif
 
 Function_0_a_b_cd::~Function_0_a_b_cd() {}
 
@@ -128,6 +120,7 @@ std::string Function_0_a_b_cd::toPrettyString() const
 
         return sstr.str();
 }
+
 
 
 

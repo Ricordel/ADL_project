@@ -18,6 +18,16 @@ template <typename T> void report(uint8_t nVariables);
 
 
 
+////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Function interface:
+//      Every function will have the same public interface. Generic comments are gathered
+//      on the first Function representant (Function_0_a_b_cd) and are note repetead for
+//      other functions. Function kind-specific information can be found in every function.
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 /**********************************************************************************************
  ********************************* Form x0 + a + b + cd ***************************************
  **********************************************************************************************/
@@ -26,10 +36,16 @@ template <typename T> void report(uint8_t nVariables);
 class Function_0_a_b_cd {
         public:
                 // No constructor, it seems to be less efficient than initialazing with 
-                // a braces struct, while the same stuff is to be done.
+                // a braced struct. That's a micro-optimization.
                 uint8_t a, b, c, d;
                 uint8_t nVariables;
 
+                // Compare with another function according do lexicographical order on
+                // the variables a, b, c, d.
+                //
+                // in: other    Function to compare with this
+                // return value: true if this is smaller or equal to other
+                //               false otherwise
                 bool smaller_or_equal(const Function_0_a_b_cd& other) const
                 {
                         if (a < other.a)
@@ -48,6 +64,16 @@ class Function_0_a_b_cd {
                 }
 
 
+                // Tell whether the current function is in canonical form. Each functions has
+                // several equivalent, due to commutativity of + and . and to invariance by
+                // reversing the arguments. A function is considered in canonical form if it's
+                // the smallest member of its equivalence class. Considering the way functions
+                // are generated (see the part on function generation), we don't need to compare
+                // with all the members of the equivalence class.
+                // See the report for more detailed information.
+                //
+                // return value: true if the function is in canonical form
+                //               false otherwise
                 bool is_canonical() const
                 {
                         uint8_t ar = nVariables - a;
@@ -60,6 +86,9 @@ class Function_0_a_b_cd {
                 }
 
 
+                // Compute the length of the NLFSR represented by this function.
+                //
+                // return value: length of the NLFSR's cycle
                 uint32_t cycle_length()
                 {
                         uint32_t length = 0;
@@ -77,6 +106,8 @@ class Function_0_a_b_cd {
                         return length;
                 }
 
+                // Print the function to stdout, according to the coding already
+                // used in the previous paper of maximum length NLFSRs
                 void print() const
                 {
                         std::cout << (uint32_t) nVariables << " variables: "
@@ -88,9 +119,24 @@ class Function_0_a_b_cd {
 
 
 
+// Generate all possible functions and compute the length of their cycles.
+// If a function is of maximum cycle length, then it's printed to stdout.
+// 
+// The generation process tries to eliminate as much duplicates as possible
+// using simple rules of commutativity of + and . , allowing to reduce the
+// number of possible remaining duplicates to test in is_canonical().
+//
+// The computing of the cycle length of every function is delegated to an
+// OpenMP task to be scheduled by the OpenMP runtime.
+// Printing to stdout must be done in a critical section to be sure several
+// outputs won't interleave. As finding a maximum length NLFSR is a rare
+// event, the synchronization overhead is negligible.
+//
+// in: nVariables       Number of variables in the NLFSR
 template <>
 void report<Function_0_a_b_cd>(uint8_t nVariables)
 {
+        // Be careful with bit shifts when nVariables = 32, we would silently overflow and fail.
         uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
 
         /* Generate the functions */
@@ -102,7 +148,6 @@ void report<Function_0_a_b_cd>(uint8_t nVariables)
                         for (uint8_t c = 1; c <= nVariables - 2; c++) {
                                 for (uint8_t d = c + 1; d <= nVariables - 1; d++) {
 
-                                        // Keep the function for later evaluation
                                         Function_0_a_b_cd func = {a, b, c, d, nVariables};
 
                                         #pragma omp task
@@ -216,7 +261,6 @@ void report<Function_0_a_bc_de>(uint8_t nVariables)
         uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
 
         /* Generate the functions */
-//#pragma omp task untied
         for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
                 std::cerr << std::endl << "a = " << (uint32_t)a << std::endl << "\t b = ";
 
@@ -227,7 +271,6 @@ void report<Function_0_a_bc_de>(uint8_t nVariables)
                                 for (uint8_t d = b; d <= nVariables - 2; d++) {
                                         for (uint8_t e = d + 1; e <= nVariables - 1; e++) {
 
-                                                // Keep the function for later evaluation
                                                 Function_0_a_bc_de func = {a, b, c, d, e, nVariables};
 
                                                 #pragma omp task
@@ -343,7 +386,6 @@ void report<Function_0_a_b_c_d_ef>(uint8_t nVariables)
         uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
 
         /* Generate the functions */
-//#pragma omp task untied
         for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
                 std::cerr << std::endl << "a = " << (uint32_t)a << std::endl << "\t b = ";
                 for (uint8_t b = a + 1; b <= nVariables - 3; b++) { /* -3 to leave room for c and d */
@@ -354,7 +396,6 @@ void report<Function_0_a_b_c_d_ef>(uint8_t nVariables)
                                         for (uint8_t e = 1; e <= nVariables - 2; e++) {
                                                 for (uint8_t f = e + 1; f <= nVariables - 1; f++) {
 
-                                                        // Keep the function for later evaluation
                                                         Function_0_a_b_c_d_ef func = {a, b, c, d, e, f, nVariables};
         
                                                         #pragma omp task
@@ -383,7 +424,7 @@ void report<Function_0_a_b_c_d_ef>(uint8_t nVariables)
 
 
 /**********************************************************************************************
- ***ù***************************** Form x0 + a + b + cde **************************************
+ ********************************* Form x0 + a + b + cde **************************************
  **********************************************************************************************/
 
 
@@ -464,7 +505,6 @@ void report<Function_0_a_b_cde>(uint8_t nVariables)
         uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
 
         /* Generate the functions */
-//#pragma omp task untied
         for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
                 std::cerr << std::endl << "a = " << (uint32_t)a << std::endl << "\t b = ";
                 for (uint8_t b = a + 1; b <= nVariables - 1; b++) {
@@ -475,7 +515,6 @@ void report<Function_0_a_b_cde>(uint8_t nVariables)
                                 for (uint8_t d = c + 1; d <= nVariables - 2; d++) {
                                         for (uint8_t e = d + 1; e <= nVariables - 1; e++) {
 
-                                                // Keep the function for later evaluation
                                                 Function_0_a_b_cde func = {a, b, c, d, e, nVariables};
 
                                                 #pragma omp task
@@ -502,9 +541,9 @@ void report<Function_0_a_b_cde>(uint8_t nVariables)
 /*********************** Main and option-parsing related stuff **************************/
 
 
-/* 
- * Command-line option
- */
+// 
+// Long command-line option and their short equivalents
+//
 static const struct option longOpts[] = {
         {"n-vars", required_argument, NULL, 'n'},
         {"func-kind", required_argument, NULL, 'k'},
@@ -512,6 +551,9 @@ static const struct option longOpts[] = {
 
 const char *shortOpts = "nk";
 
+//
+// Program global options
+//
 struct __globalOptions {
         uint32_t nVariables;
         std::string funcKind;
@@ -541,10 +583,11 @@ int main(int argc, char *argv[])
                                 break;
                 }
 
-                // Get next option
+                // Next option
                 opt = getopt_long(argc, argv, shortOpts, longOpts, &longIndex);
         }
 
+        // Spawn worker threads, but make them wait for tasks to be generated
 #pragma omp parallel
 #pragma omp single
         {
@@ -558,7 +601,7 @@ int main(int argc, char *argv[])
                 } else if (globalOptions.funcKind == "0_a_b_cde") {
                         report<Function_0_a_b_cde>(globalOptions.nVariables);
                 } else {
-                        std::cerr << "Function kind " << globalOptions.funcKind << " not recognized" << std::endl;
+                        std::cerr << "Function kind '" << globalOptions.funcKind << "' not recognized" << std::endl;
                 }
         }
 
