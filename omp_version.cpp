@@ -94,9 +94,10 @@ void report<Function_0_a_b_cd>(uint8_t nVariables)
         uint32_t maxPossibleLength = (nVariables == 32) ? 0xffffffff : (1 << nVariables) - 1;
 
         /* Generate the functions */
-//#pragma omp task untied
         for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
+                std::cerr << std::endl << "a = " << (uint32_t)a << std::endl << "\t b = ";
                 for (uint8_t b = a + 1; b <= nVariables - 1; b++) {
+                        std::cerr << (uint32_t)b << ", ";
 
                         for (uint8_t c = 1; c <= nVariables - 2; c++) {
                                 for (uint8_t d = c + 1; d <= nVariables - 1; d++) {
@@ -217,8 +218,10 @@ void report<Function_0_a_bc_de>(uint8_t nVariables)
         /* Generate the functions */
 //#pragma omp task untied
         for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
+                std::cerr << std::endl << "a = " << (uint32_t)a << std::endl << "\t b = ";
 
                 for (uint8_t b = 1; b <= nVariables - 2; b++) {
+                        std::cerr << (uint32_t)b << ", ";
                         for (uint8_t c = b + 1; c <= nVariables - 1; c++) {
 
                                 for (uint8_t d = b; d <= nVariables - 2; d++) {
@@ -342,7 +345,9 @@ void report<Function_0_a_b_c_d_ef>(uint8_t nVariables)
         /* Generate the functions */
 //#pragma omp task untied
         for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
+                std::cerr << std::endl << "a = " << (uint32_t)a << std::endl << "\t b = ";
                 for (uint8_t b = a + 1; b <= nVariables - 3; b++) { /* -3 to leave room for c and d */
+                        std::cerr << (uint32_t)b << ", ";
                         for (uint8_t c = b + 1; c <= nVariables - 2; c++) { /* -2 to leave room for d */
                                 for (uint8_t d = c + 1; d <= nVariables - 1; d++) {
 
@@ -461,7 +466,9 @@ void report<Function_0_a_b_cde>(uint8_t nVariables)
         /* Generate the functions */
 //#pragma omp task untied
         for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
+                std::cerr << std::endl << "a = " << (uint32_t)a << std::endl << "\t b = ";
                 for (uint8_t b = a + 1; b <= nVariables - 1; b++) {
+                        std::cerr << (uint32_t)b << ", ";
 
 
                         for (uint8_t c = 1; c <= nVariables - 3; c++) { /* -3 to leave room for d and e */
@@ -548,7 +555,7 @@ int main(int argc, char *argv[])
                         report<Function_0_a_bc_de>(globalOptions.nVariables);
                 } else if (globalOptions.funcKind == "0_a_b_c_d_ef") {
                         report<Function_0_a_b_c_d_ef>(globalOptions.nVariables);
-                } else if (globalOptions.funcKind == "0_a_b_c_d_ef") {
+                } else if (globalOptions.funcKind == "0_a_b_cde") {
                         report<Function_0_a_b_cde>(globalOptions.nVariables);
                 } else {
                         std::cerr << "Function kind " << globalOptions.funcKind << " not recognized" << std::endl;
