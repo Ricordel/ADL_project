@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 #include <cuda.h>
 #include <stdint.h>
@@ -11,6 +12,7 @@
 
 
 #define FUNCS_PER_KERNEL (1 << 18)
+#define N_FUNCS_TO_REPORT 10U
 
 
 
@@ -59,32 +61,40 @@ void getGPUProperties()
 
 ////// The following templates will need to be specialized for each type of functions ///////
 
-template <typename FuncType>
+template <class FuncType>
 bool smaller_or_equal(FuncType& one, FuncType& other);
 
-template <typename FuncType>
+template <class FuncType>
 bool canonical(FuncType& func);
 
 
-template <typename FuncType>
+template <class FuncType>
 __global__ void kernel_to_the_end(FuncType *d_funcArray,
                                   uint32_t nQueued, uint32_t maxPossibleLength);
 
-template <typename FuncType>
+template <class FuncType>
 __global__ void kernel_filter(FuncType *d_funcArray,
                               uint32_t nQueued, uint32_t filterValue);
 
 
-template <typename FuncType> void print_func(FuncType& func);
+template <class FuncType> void print_func(FuncType& func);
 
-template <typename FuncType>
+template <class FuncType>
 void generate_functions(uint32_t nVariables, std::vector<FuncType>& funcArray);
 
 
 
 ////// The following templates are generic ///////
 
-template <typename FuncType>
+// Allow to sort by DECREASING cycle length order
+template <class FuncKind>
+bool compare_funcs(const FuncKind& one, const FuncKind& other)
+{
+        return (one.lengthSoFar > other.lengthSoFar);
+}
+
+
+template <class FuncType>
 void send_and_filter_to(std::vector<FuncType>& h_funcArray,
                      std::vector<FuncType>& h_remainingFuncArray,
                      CudaMallocWrapper<FuncType>& d_funcArray,
@@ -110,10 +120,10 @@ void send_and_filter_to(std::vector<FuncType>& h_funcArray,
 }
 
 
-template <typename FuncType>
+template <class FuncType>
 void send_and_report(std::vector<FuncType>& h_funcArray,
-                   CudaMallocWrapper<FuncType>& d_funcArray,
-                   uint32_t maxPossibleLength)
+                     CudaMallocWrapper<FuncType>& d_funcArray,
+                     uint32_t maxPossibleLength)
 {
     uint32_t nBlocks, nThreadsPerBlock, nQueued;
     nQueued = h_funcArray.size();
@@ -127,15 +137,24 @@ void send_and_report(std::vector<FuncType>& h_funcArray,
 
     cudaMemcpyWrapped<FuncType>(&h_funcArray[0], d_funcArray.mem, nQueued, cudaMemcpyDeviceToHost);
 
-    for (int i = 0; i < nQueued; i++) {
-        if (h_funcArray[i].lengthSoFar == maxPossibleLength) {
-            print_func<FuncType>(h_funcArray[i]);
-        }
+
+    std::sort(h_funcArray.begin(), h_funcArray.end(), compare_funcs<FuncType>);
+
+    //FIXME: There would be a problem here if the number of functions remaining
+    // after the last 'filter' operation was less than N_FUNCS_TO_REPORT. Then,
+    // less functions would be reported.
+    // The correction of this problem would require some extra computation
+    // in filter_remaining. Considering that with N_FUNCS_TO_REPORT == 10
+    // and 10 filtering passes, this will never happen, this code has not
+    // been written.
+    for (int i = 0; i < N_FUNCS_TO_REPORT && i < h_funcArray.size(); i++) {
+        print_func<FuncType>(h_funcArray[i]);
     }
+
 }
 
 
-template <typename FuncType>
+template <class FuncType>
 inline void filter_remaining(std::vector<FuncType>& in, std::vector<FuncType>& out, 
                              CudaMallocWrapper<FuncType>& d_funcArray,
                              uint32_t filterValue)
@@ -160,7 +179,7 @@ inline void filter_remaining(std::vector<FuncType>& in, std::vector<FuncType>& o
 }
 
 
-template <typename FuncType>
+template <class FuncType>
 static inline void to_the_end(std::vector<FuncType>& h_funcArray,
                               CudaMallocWrapper<FuncType>& d_funcArray,
                               uint32_t maxPossibleLength)
@@ -187,7 +206,7 @@ static inline void to_the_end(std::vector<FuncType>& h_funcArray,
 
 
 
-template <typename FuncType>
+template <class FuncType>
 void report(uint32_t nVariables)
 {
     getGPUProperties();
@@ -267,6 +286,7 @@ void print_func<Function_0_a_b_cd> (Function_0_a_b_cd& func)
     std::cout << (uint32_t) func.nVariables << " variables: "
               << "0," << (uint32_t)func.a << "," << (uint32_t)func.b
               << ",(" << (uint32_t)func.c << "," << (uint32_t)func.d << ")"
+              << ", cycle length: " << func.lengthSoFar << ", max poss length: " << (1 << func.nVariables) - 1
               << std::endl;
 }
 

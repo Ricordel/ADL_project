@@ -31,8 +31,6 @@ template <typename T> void report(uint8_t nVariables);
 
 /////////// Kepping trace of longest NLFSRs ////////////////////
 
-// This is not the compputationally intensive part, so don't bother with any
-// optimization here.
 
 // Allow to sort by DECREASING cycle length order
 template <typename FuncKind>
@@ -42,30 +40,6 @@ bool compare_funcs(const FuncKind& one, const FuncKind& other)
 }
 
 
-#if 0
-// Attention: this is called in a critical section. Do all we can to exit
-// as quickly as possible
-template <typename FuncKind>
-void keep_if_max(std::vector<FuncKind>& maxFunctions, FuncKind candidate)
-{
-        if (candidate.m_length < maxFunctions[0].m_length) {
-                return;
-        }
-
-
-
-        maxFunctions.push_back(candidate);
-        std::sort(maxFunctions.begin(), maxFunctions.end(), compare_funcs<FuncKind>);
-
-        if (maxFunctions.size() == N_FUNCS_TO_REPORT + 1) {
-                maxFunctions.erase(maxFunctions.begin());
-        } else if (maxFunctions.size() > N_FUNCS_TO_REPORT + 1) {
-                std::cerr << "Too much functions, shold not happen !" << std::endl;
-        }
-
-        std::cerr << "There are " << maxFunctions.size() << " functions" << std::endl;
-}
-#endif
 
 /**********************************************************************************************
  ********************************* Form x0 + a + b + cd ***************************************
