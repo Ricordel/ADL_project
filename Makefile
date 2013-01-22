@@ -2,7 +2,8 @@
 # everytime
 
 CXX = g++
-CXXFLAGS = -Wall -Wextra -O3 -fopenmp -g
+CXXFLAGS = -Wall -Wextra -O3 -fopenmp
+#CXXFLAGS = -Wall -Wextra -O0 -fopenmp -g
 
 
 all: omp_version cuda_version print_function
