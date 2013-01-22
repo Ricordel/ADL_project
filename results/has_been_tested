@@ -1,29 +1,29 @@
 26 variables:
     a_b_cd: nothing
     a_bc_de: nothing
-    a_b_c_d_ef: PENDING
+    a_b_c_d_ef: nothing
     a_b_cde: nothing
 
 27 variables:
     a_b_cd: nothing
-    a_bc_de: PENDING
-    a_b_c_d_ef:
-    a_b_cde:
+    a_bc_de: nothing
+    a_b_c_d_ef: nothing
+    a_b_cde: nothing
 
 28 variables:
-    a_b_cd
-    a_bc_de
-    a_b_c_d_ef
-    a_b_cde
+    a_b_cd: nothing
+    a_bc_de: nothing
+    a_b_c_d_ef:
+    a_b_cde: nothing
 
 29 variables:
-    a_b_cd
-    a_bc_de
-    a_b_c_d_ef
-    a_b_cde
+    a_b_cd: nothing
+    a_bc_de: nothing
+    a_b_c_d_ef:
+    a_b_cde: nothing
 
 30 variables:
-    a_b_cd
+    a_b_cd: nothing
     a_bc_de
     a_b_c_d_ef
     a_b_cde

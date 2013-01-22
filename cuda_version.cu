@@ -10,7 +10,7 @@
 #include "dbg.h"
 
 
-#define FUNCS_PER_KERNEL (1 << 16)
+#define FUNCS_PER_KERNEL (1 << 18)
 
 
 
