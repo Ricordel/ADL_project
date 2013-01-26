@@ -16,7 +16,7 @@
 #define bit(nBit, val) (((val) >> (nBit)) & 0x1)
 
 
-template <typename T> void report(uint8_t nVariables);
+template <typename T> void report(uint8_t nVariables, int32_t keepProba);
 
 
 
@@ -164,7 +164,7 @@ class Function_0_a_b_cd {
 //
 // in: nVariables       Number of variables in the NLFSR
 template <>
-void report<Function_0_a_b_cd>(uint8_t nVariables)
+void report<Function_0_a_b_cd>(uint8_t nVariables, int32_t keepProba)
 {
         std::vector<Function_0_a_b_cd> maxNLFSR;
 
@@ -177,14 +177,17 @@ void report<Function_0_a_b_cd>(uint8_t nVariables)
                         for (uint8_t c = 1; c <= nVariables - 2; c++) {
                                 for (uint8_t d = c + 1; d <= nVariables - 1; d++) {
 
-                                        Function_0_a_b_cd func(a, b, c, d, nVariables);
+                                        // Try it only at random
+                                        if ( (rand() % 100) < keepProba) {
+                                                Function_0_a_b_cd func(a, b, c, d, nVariables);
 
-                                        #pragma omp task shared(maxNLFSR) firstprivate(func)
-                                        {
-                                                if (func.is_canonical()) {
-                                                        func.compute_cycle_length(); // Compute cycle length and keep track in the func.
-                                                        #pragma omp critical
+                                                #pragma omp task shared(maxNLFSR) firstprivate(func)
+                                                {
+                                                        if (func.is_canonical()) {
+                                                                func.compute_cycle_length(); // Compute cycle length and keep track in the func.
+                                                                #pragma omp critical
                                                                 maxNLFSR.push_back(func);
+                                                        }
                                                 }
                                         }
                                 }
@@ -307,7 +310,7 @@ class Function_0_a_bc_de {
 
 
 template <>
-void report<Function_0_a_bc_de>(uint8_t nVariables)
+void report<Function_0_a_bc_de>(uint8_t nVariables, int32_t keepProba)
 {
         std::vector<Function_0_a_bc_de> maxNLFSR;
 
@@ -322,14 +325,17 @@ void report<Function_0_a_bc_de>(uint8_t nVariables)
                                 for (uint8_t d = b; d <= nVariables - 2; d++) {
                                         for (uint8_t e = d + 1; e <= nVariables - 1; e++) {
 
-                                                Function_0_a_bc_de func(a, b, c, d, e, nVariables);
+                                                // Try it only at random
+                                                if ( (rand() % 100) < keepProba) {
+                                                        Function_0_a_bc_de func(a, b, c, d, e, nVariables);
 
-                                                #pragma omp task shared(maxNLFSR)
-                                                {
-                                                        if (func.is_canonical()) {
-                                                                func.compute_cycle_length(); // Compute length and keep track in the func.
-                                                                #pragma omp critical
-                                                                maxNLFSR.push_back(func);
+                                                        #pragma omp task shared(maxNLFSR)
+                                                        {
+                                                                if (func.is_canonical()) {
+                                                                        func.compute_cycle_length(); // Compute length and keep track in the func.
+                                                                        #pragma omp critical
+                                                                        maxNLFSR.push_back(func);
+                                                                }
                                                         }
                                                 }
                                         }
@@ -454,7 +460,7 @@ class Function_0_a_b_c_d_ef {
 
 
 template <>
-void report<Function_0_a_b_c_d_ef>(uint8_t nVariables)
+void report<Function_0_a_b_c_d_ef>(uint8_t nVariables, int32_t keepProba)
 {
         std::vector<Function_0_a_b_c_d_ef> maxNLFSR;
 
@@ -469,14 +475,17 @@ void report<Function_0_a_b_c_d_ef>(uint8_t nVariables)
                                         for (uint8_t e = 1; e <= nVariables - 2; e++) {
                                                 for (uint8_t f = e + 1; f <= nVariables - 1; f++) {
 
-                                                        Function_0_a_b_c_d_ef func(a, b, c, d, e, f, nVariables);
+                                                        // Try it only at random
+                                                        if ( (rand() % 100) < keepProba) {
+                                                                Function_0_a_b_c_d_ef func(a, b, c, d, e, f, nVariables);
 
-                                                        #pragma omp task shared(maxNLFSR)
-                                                        {
-                                                                if (func.is_canonical()) {
-                                                                        func.compute_cycle_length();
-                                                                        #pragma omp critical
-                                                                        maxNLFSR.push_back(func);
+                                                                #pragma omp task shared(maxNLFSR)
+                                                                {
+                                                                        if (func.is_canonical()) {
+                                                                                func.compute_cycle_length();
+                                                                                #pragma omp critical
+                                                                                maxNLFSR.push_back(func);
+                                                                        }
                                                                 }
                                                         }
                                                 }
@@ -594,7 +603,7 @@ class Function_0_a_b_cde {
 
 
 template <>
-void report<Function_0_a_b_cde>(uint8_t nVariables)
+void report<Function_0_a_b_cde>(uint8_t nVariables, int32_t keepProba)
 {
         std::vector<Function_0_a_b_cde> maxNLFSR;
 
@@ -609,14 +618,17 @@ void report<Function_0_a_b_cde>(uint8_t nVariables)
                                 for (uint8_t d = c + 1; d <= nVariables - 2; d++) {
                                         for (uint8_t e = d + 1; e <= nVariables - 1; e++) {
 
-                                                Function_0_a_b_cde func(a, b, c, d, e, nVariables);
+                                                // Try it only at random
+                                                if ( (rand() % 100) < keepProba) {
+                                                        Function_0_a_b_cde func(a, b, c, d, e, nVariables);
 
-                                                #pragma omp task shared(maxNLFSR)
-                                                {
-                                                        if (func.is_canonical()) {
-                                                                func.compute_cycle_length();
-                                                                #pragma omp critical
-                                                                maxNLFSR.push_back(func);
+                                                        #pragma omp task shared(maxNLFSR)
+                                                        {
+                                                                if (func.is_canonical()) {
+                                                                        func.compute_cycle_length();
+                                                                        #pragma omp critical
+                                                                        maxNLFSR.push_back(func);
+                                                                }
                                                         }
                                                 }
                                         }
@@ -647,9 +659,10 @@ void report<Function_0_a_b_cde>(uint8_t nVariables)
 static const struct option longOpts[] = {
         {"n-vars", required_argument, NULL, 'n'},
         {"func-kind", required_argument, NULL, 'k'},
+        {"keep-proba", required_argument, NULL, 'p'},
 };
 
-const char *shortOpts = "nk";
+const char *shortOpts = "nkp";
 
 //
 // Program global options
@@ -657,6 +670,7 @@ const char *shortOpts = "nk";
 struct __globalOptions {
         uint32_t nVariables;
         std::string funcKind;
+        int32_t keepProba;
 } globalOptions;
 
 
@@ -664,6 +678,7 @@ int main(int argc, char *argv[])
 {
         globalOptions.nVariables = 0;
         globalOptions.funcKind = "";
+        globalOptions.keepProba = 0;
 
         int longIndex;
 
@@ -681,6 +696,13 @@ int main(int argc, char *argv[])
                         case 'k':
                                 globalOptions.funcKind = std::string(optarg);
                                 break;
+                        case 'p':
+                                globalOptions.keepProba = strtol(optarg, NULL, 10);
+                                if (errno == ERANGE) {
+                                        std::cerr << "Could not parse " << optarg << " as a number" << std::endl;
+                                        exit(1);
+                                }
+                                break;
                 }
 
                 // Next option
@@ -693,13 +715,13 @@ int main(int argc, char *argv[])
         {
                 // Filter on the required type of function to test
                 if (globalOptions.funcKind == "0_a_b_cd") {
-                        report<Function_0_a_b_cd>(globalOptions.nVariables);
+                        report<Function_0_a_b_cd>(globalOptions.nVariables, globalOptions.keepProba);
                 } else if (globalOptions.funcKind == "0_a_bc_de") {
-                        report<Function_0_a_bc_de>(globalOptions.nVariables);
+                        report<Function_0_a_bc_de>(globalOptions.nVariables, globalOptions.keepProba);
                 } else if (globalOptions.funcKind == "0_a_b_c_d_ef") {
-                        report<Function_0_a_b_c_d_ef>(globalOptions.nVariables);
+                        report<Function_0_a_b_c_d_ef>(globalOptions.nVariables, globalOptions.keepProba);
                 } else if (globalOptions.funcKind == "0_a_b_cde") {
-                        report<Function_0_a_b_cde>(globalOptions.nVariables);
+                        report<Function_0_a_b_cde>(globalOptions.nVariables, globalOptions.keepProba);
                 } else {
                         std::cerr << "Function kind '" << globalOptions.funcKind << "' not recognized" << std::endl;
                 }
