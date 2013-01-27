@@ -9,6 +9,7 @@
 #include <errno.h>
 
 
+#define REPORT_ONLY_BIG 0
 
 #define N_FUNCS_TO_REPORT 10
 
@@ -177,13 +178,13 @@ void report<Function_0_a_b_cd>(uint8_t nVariables, int32_t keepProba)
                         for (uint8_t c = 1; c <= nVariables - 2; c++) {
                                 for (uint8_t d = c + 1; d <= nVariables - 1; d++) {
 
-                                        // Try it only at random
-                                        if ( (rand() % 100) < keepProba) {
-                                                Function_0_a_b_cd func(a, b, c, d, nVariables);
+                                        Function_0_a_b_cd func(a, b, c, d, nVariables);
 
-                                                #pragma omp task shared(maxNLFSR) firstprivate(func)
-                                                {
-                                                        if (func.is_canonical()) {
+                                        #pragma omp task shared(maxNLFSR) firstprivate(func)
+                                        {
+                                                if (func.is_canonical()) {
+                                                        // Try it only at random
+                                                        if ( (rand() % 100) < keepProba) {
                                                                 func.compute_cycle_length(); // Compute cycle length and keep track in the func.
                                                                 #pragma omp critical
                                                                 maxNLFSR.push_back(func);
@@ -200,10 +201,17 @@ void report<Function_0_a_b_cd>(uint8_t nVariables, int32_t keepProba)
         // Sort the functions by cycle length and print the longest ones
         std::sort(maxNLFSR.begin(), maxNLFSR.end(), compare_funcs<Function_0_a_b_cd>);
 
+#if REPORT_ONLY_BIG
         std::vector<Function_0_a_b_cd>::iterator it = maxNLFSR.begin();
         for (int i = 0; i < N_FUNCS_TO_REPORT && it != maxNLFSR.end(); i++, it++) {
                 it->print();
         }
+#else
+        for (std::vector<Function_0_a_b_cd>::iterator it = maxNLFSR.begin();
+             it != maxNLFSR.end(); it++) {
+                it->print();
+        }
+#endif
 }
 
 
@@ -325,13 +333,13 @@ void report<Function_0_a_bc_de>(uint8_t nVariables, int32_t keepProba)
                                 for (uint8_t d = b; d <= nVariables - 2; d++) {
                                         for (uint8_t e = d + 1; e <= nVariables - 1; e++) {
 
-                                                // Try it only at random
-                                                if ( (rand() % 100) < keepProba) {
-                                                        Function_0_a_bc_de func(a, b, c, d, e, nVariables);
+                                                Function_0_a_bc_de func(a, b, c, d, e, nVariables);
 
-                                                        #pragma omp task shared(maxNLFSR)
-                                                        {
-                                                                if (func.is_canonical()) {
+                                                #pragma omp task shared(maxNLFSR) firstprivate(func)
+                                                {
+                                                        if (func.is_canonical()) {
+                                                                // Try it only at random
+                                                                if ( (rand() % 100) < keepProba) {
                                                                         func.compute_cycle_length(); // Compute length and keep track in the func.
                                                                         #pragma omp critical
                                                                         maxNLFSR.push_back(func);
@@ -349,10 +357,17 @@ void report<Function_0_a_bc_de>(uint8_t nVariables, int32_t keepProba)
         // Sort the functions by cycle length and print the longest ones
         std::sort(maxNLFSR.begin(), maxNLFSR.end(), compare_funcs<Function_0_a_bc_de>);
 
+#if REPORT_ONLY_BIG
         std::vector<Function_0_a_bc_de>::iterator it = maxNLFSR.begin();
         for (int i = 0; i < N_FUNCS_TO_REPORT && it != maxNLFSR.end(); i++, it++) {
                 it->print();
         }
+#else
+        for (std::vector<Function_0_a_bc_de>::iterator it = maxNLFSR.begin();
+             it != maxNLFSR.end(); it++) {
+                it->print();
+        }
+#endif
 }
 
 
@@ -475,13 +490,13 @@ void report<Function_0_a_b_c_d_ef>(uint8_t nVariables, int32_t keepProba)
                                         for (uint8_t e = 1; e <= nVariables - 2; e++) {
                                                 for (uint8_t f = e + 1; f <= nVariables - 1; f++) {
 
-                                                        // Try it only at random
-                                                        if ( (rand() % 100) < keepProba) {
-                                                                Function_0_a_b_c_d_ef func(a, b, c, d, e, f, nVariables);
+                                                        Function_0_a_b_c_d_ef func(a, b, c, d, e, f, nVariables);
 
-                                                                #pragma omp task shared(maxNLFSR)
-                                                                {
-                                                                        if (func.is_canonical()) {
+                                                        #pragma omp task shared(maxNLFSR) firstprivate(func)
+                                                        {
+                                                                if (func.is_canonical()) {
+                                                                        // Try it only at random
+                                                                        if ( (rand() % 100) < keepProba) {
                                                                                 func.compute_cycle_length();
                                                                                 #pragma omp critical
                                                                                 maxNLFSR.push_back(func);
@@ -499,10 +514,17 @@ void report<Function_0_a_b_c_d_ef>(uint8_t nVariables, int32_t keepProba)
         // Sort the functions by cycle length and print the longest ones
         std::sort(maxNLFSR.begin(), maxNLFSR.end(), compare_funcs<Function_0_a_b_c_d_ef>);
 
+#if REPORT_ONLY_BIG
         std::vector<Function_0_a_b_c_d_ef>::iterator it = maxNLFSR.begin();
         for (int i = 0; i < N_FUNCS_TO_REPORT && it != maxNLFSR.end(); i++, it++) {
                 it->print();
         }
+#else
+        for (std::vector<Function_0_a_b_c_d_ef>::iterator it = maxNLFSR.begin();
+             it != maxNLFSR.end(); it++) {
+                it->print();
+        }
+#endif
 }
 
 
@@ -618,13 +640,13 @@ void report<Function_0_a_b_cde>(uint8_t nVariables, int32_t keepProba)
                                 for (uint8_t d = c + 1; d <= nVariables - 2; d++) {
                                         for (uint8_t e = d + 1; e <= nVariables - 1; e++) {
 
-                                                // Try it only at random
-                                                if ( (rand() % 100) < keepProba) {
-                                                        Function_0_a_b_cde func(a, b, c, d, e, nVariables);
+                                                Function_0_a_b_cde func(a, b, c, d, e, nVariables);
 
-                                                        #pragma omp task shared(maxNLFSR)
-                                                        {
-                                                                if (func.is_canonical()) {
+                                                #pragma omp task shared(maxNLFSR) firstprivate(func)
+                                                {
+                                                        if (func.is_canonical()) {
+                                                                // Try it only at random
+                                                                if ( (rand() % 100) < keepProba) {
                                                                         func.compute_cycle_length();
                                                                         #pragma omp critical
                                                                         maxNLFSR.push_back(func);
@@ -641,10 +663,17 @@ void report<Function_0_a_b_cde>(uint8_t nVariables, int32_t keepProba)
         // Sort the functions by cycle length and print the longest ones
         std::sort(maxNLFSR.begin(), maxNLFSR.end(), compare_funcs<Function_0_a_b_cde>);
 
+#if REPORT_ONLY_BIG
         std::vector<Function_0_a_b_cde>::iterator it = maxNLFSR.begin();
         for (int i = 0; i < N_FUNCS_TO_REPORT && it != maxNLFSR.end(); i++, it++) {
                 it->print();
         }
+#else
+        for (std::vector<Function_0_a_b_cde>::iterator it = maxNLFSR.begin();
+             it != maxNLFSR.end(); it++) {
+                it->print();
+        }
+#endif
 }
 
 
@@ -678,7 +707,7 @@ int main(int argc, char *argv[])
 {
         globalOptions.nVariables = 0;
         globalOptions.funcKind = "";
-        globalOptions.keepProba = 0;
+        globalOptions.keepProba = 100;
 
         int longIndex;
 
