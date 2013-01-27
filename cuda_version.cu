@@ -6,6 +6,7 @@
 #include <cuda.h>
 #include <stdint.h>
 #include <getopt.h>
+#include <cstdlib>
 
 #include "cudaMallocWrapper.hpp"
 #include "dbg.h"
@@ -80,7 +81,7 @@ __global__ void kernel_filter(FuncType *d_funcArray,
 template <class FuncType> void print_func(FuncType& func);
 
 template <class FuncType>
-void generate_functions(uint32_t nVariables, std::vector<FuncType>& funcArray);
+void generate_functions(uint32_t nVariables, std::vector<FuncType>& funcArray, int32_t keepProba);
 
 
 
@@ -207,7 +208,7 @@ static inline void to_the_end(std::vector<FuncType>& h_funcArray,
 
 
 template <class FuncType>
-void report(uint32_t nVariables)
+void report(uint32_t nVariables, int32_t keepProba)
 {
     getGPUProperties();
 
@@ -220,7 +221,7 @@ void report(uint32_t nVariables)
     /* Allocate memory for arrays on device */
     CudaMallocWrapper<FuncType> d_funcArray(FUNCS_PER_KERNEL);
 
-    generate_functions<FuncType>(nVariables, h_funcArray_a);
+    generate_functions<FuncType>(nVariables, h_funcArray_a, keepProba);
 
     // The following filtering pattern has been empirically found as being not too far from
     // optimal, it seems.
@@ -414,7 +415,7 @@ __global__ void kernel_filter<Function_0_a_b_cd>(Function_0_a_b_cd *d_funcArray,
 
 /************************************ Functions generation **************************************/
 template <>
-void generate_functions<Function_0_a_b_cd>(uint32_t nVariables, std::vector<Function_0_a_b_cd>& funcArray)
+void generate_functions<Function_0_a_b_cd>(uint32_t nVariables, std::vector<Function_0_a_b_cd>& funcArray, int32_t keepProba)
 {
 
     /* Generate the functions */
@@ -430,7 +431,9 @@ void generate_functions<Function_0_a_b_cd>(uint32_t nVariables, std::vector<Func
                     if (!canonical<Function_0_a_b_cd>(func)) {
                         continue;
                     }
-                    funcArray.push_back(func);
+                    if ( (rand() % 100) < keepProba) {
+                        funcArray.push_back(func);
+                    }
                 }
             }
         }
@@ -465,6 +468,7 @@ void print_func<Function_0_a_bc_de> (Function_0_a_bc_de& func)
               << "0," << (uint32_t)func.a
               << ",(" << (uint32_t)func.b << "," << (uint32_t)func.c << ")"
               << ",(" << (uint32_t)func.d << "," << (uint32_t)func.e << ")"
+              << ", cycle length: " << func.lengthSoFar << ", max poss length: " << (1 << func.nVariables) - 1
               << std::endl;
 }
 
@@ -609,7 +613,7 @@ __global__ void kernel_filter<Function_0_a_bc_de>(Function_0_a_bc_de *d_funcArra
 
 /************************************ Functions generation **************************************/
 template <>
-void generate_functions<Function_0_a_bc_de>(uint32_t nVariables, std::vector<Function_0_a_bc_de>& funcArray)
+void generate_functions<Function_0_a_bc_de>(uint32_t nVariables, std::vector<Function_0_a_bc_de>& funcArray, int32_t keepProba)
 {
 
     /* Generate the functions */
@@ -628,7 +632,9 @@ void generate_functions<Function_0_a_bc_de>(uint32_t nVariables, std::vector<Fun
                             continue;
                         }
 
-                        funcArray.push_back(func);
+                        if ( (rand() % 100) < keepProba) {
+                            funcArray.push_back(func);
+                        }
                     }
                 }
             }
@@ -668,6 +674,7 @@ void print_func<Function_0_a_b_c_d_ef> (Function_0_a_b_c_d_ef& func)
               << "0," << (uint32_t)func.a << "," << (uint32_t)func.b
               << ","  << (uint32_t)func.c << "," << (uint32_t)func.d
               << ",(" << (uint32_t)func.e << "," << (uint32_t)func.f << ")"
+              << ", cycle length: " << func.lengthSoFar << ", max poss length: " << (1 << func.nVariables) - 1
               << std::endl;
 }
 
@@ -807,7 +814,7 @@ __global__ void kernel_filter<Function_0_a_b_c_d_ef>(Function_0_a_b_c_d_ef *d_fu
 
 /************************************ Functions generation **************************************/
 template <>
-void generate_functions<Function_0_a_b_c_d_ef>(uint32_t nVariables, std::vector<Function_0_a_b_c_d_ef>& funcArray)
+void generate_functions<Function_0_a_b_c_d_ef>(uint32_t nVariables, std::vector<Function_0_a_b_c_d_ef>& funcArray, int32_t keepProba)
 {
     for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
         for (uint8_t b = a + 1; b <= nVariables - 3; b++) { /* -3 to leave room for c and d */
@@ -824,7 +831,9 @@ void generate_functions<Function_0_a_b_c_d_ef>(uint32_t nVariables, std::vector<
                                 continue;
                             }
 
-                            funcArray.push_back(func);
+                            if ( (rand() % 100) < keepProba) {
+                                funcArray.push_back(func);
+                            }
                         }
                     }
                 }
@@ -864,6 +873,7 @@ void print_func<Function_0_a_b_cde> (Function_0_a_b_cde& func)
     std::cout << (uint32_t) func.nVariables << " variables: "
               << 0 << "," << (uint32_t) func.a  << "," << (uint32_t) func.b
               << ",(" << (uint32_t) func.c << "," << (uint32_t) func.d << "," << (uint32_t) func.e << ")"
+              << ", cycle length: " << func.lengthSoFar << ", max poss length: " << (1 << func.nVariables) - 1
               << std::endl;
 }
 
@@ -994,7 +1004,7 @@ __global__ void kernel_filter<Function_0_a_b_cde>(Function_0_a_b_cde *d_funcArra
 
 /************************************ Functions generation **************************************/
 template <>
-void generate_functions<Function_0_a_b_cde>(uint32_t nVariables, std::vector<Function_0_a_b_cde>& funcArray)
+void generate_functions<Function_0_a_b_cde>(uint32_t nVariables, std::vector<Function_0_a_b_cde>& funcArray, int32_t keepProba)
 {
     for (uint8_t a = 1; a <= (nVariables + 1) / 2; a++) {
         for (uint8_t b = a + 1; b <= nVariables - 1; b++) {
@@ -1010,7 +1020,9 @@ void generate_functions<Function_0_a_b_cde>(uint32_t nVariables, std::vector<Fun
                             continue;
                         }
 
-                        funcArray.push_back(func);
+                        if ( (rand() % 100) < keepProba) {
+                            funcArray.push_back(func);
+                        }
                     }
                 }
             }
@@ -1027,13 +1039,15 @@ void generate_functions<Function_0_a_b_cde>(uint32_t nVariables, std::vector<Fun
 static const struct option longOpts[] = {
         {"n-vars", required_argument, NULL, 'n'},
         {"func-kind", required_argument, NULL, 'k'},
+        {"keep-proba", required_argument, NULL, 'p'},
 };
 
-const char *shortOpts = "nk";
+const char *shortOpts = "nkp";
 
 struct __globalOptions {
         uint32_t nVariables;
         std::string funcKind;
+        int32_t keepProba;
 } globalOptions;
 
 
@@ -1041,6 +1055,7 @@ int main(int argc, char *argv[])
 {
     globalOptions.nVariables = 0;
     globalOptions.funcKind = "";
+        globalOptions.keepProba = 100;
 
     int longIndex;
 
@@ -1058,6 +1073,13 @@ int main(int argc, char *argv[])
             case 'k':
                 globalOptions.funcKind = std::string(optarg);
                 break;
+            case 'p':
+                globalOptions.keepProba = strtol(optarg, NULL, 10);
+                if (errno == ERANGE) {
+                    std::cerr << "Could not parse " << optarg << " as a number" << std::endl;
+                    exit(1);
+                }
+                break;
         }
 
         // Get next option
@@ -1066,13 +1088,13 @@ int main(int argc, char *argv[])
 
     // Filter on the required type of function to test
     if (globalOptions.funcKind == "0_a_b_cd") {
-        report<Function_0_a_b_cd>(globalOptions.nVariables);
+        report<Function_0_a_b_cd>(globalOptions.nVariables, globalOptions.keepProba);
     } else if (globalOptions.funcKind == "0_a_bc_de") {
-        report<Function_0_a_bc_de>(globalOptions.nVariables);
+        report<Function_0_a_bc_de>(globalOptions.nVariables, globalOptions.keepProba);
     } else if (globalOptions.funcKind == "0_a_b_c_d_ef") {
-        report<Function_0_a_b_c_d_ef>(globalOptions.nVariables);
+        report<Function_0_a_b_c_d_ef>(globalOptions.nVariables, globalOptions.keepProba);
     } else if (globalOptions.funcKind == "0_a_b_cde") {
-        report<Function_0_a_b_cde>(globalOptions.nVariables);
+        report<Function_0_a_b_cde>(globalOptions.nVariables, globalOptions.keepProba);
     } else {
         std::cerr << "Function kind " << globalOptions.funcKind << " not recognized" << std::endl;
     }
