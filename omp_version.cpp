@@ -9,8 +9,10 @@
 #include <errno.h>
 
 
+// If set to 1, report only the N_FUNCS_TO_REPORT biggest NLFSRs
+// Otherwise, every function will be printed, sorted by NLFSR
+// cycle length.
 #define REPORT_ONLY_BIG 1
-
 #define N_FUNCS_TO_REPORT 10
 
 
@@ -29,8 +31,6 @@ template <typename T> void report(uint8_t nVariables, int32_t keepProba);
 //      other functions. Function kind-specific information can be found in every function.
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-
-/////////// Kepping trace of longest NLFSRs ////////////////////
 
 
 // Allow to sort by DECREASING cycle length order
@@ -159,9 +159,8 @@ class Function_0_a_b_cd {
 //
 // The computing of the cycle length of every function is delegated to an
 // OpenMP task to be scheduled by the OpenMP runtime.
-// Printing to stdout must be done in a critical section to be sure several
-// outputs won't interleave. As finding a maximum length NLFSR is a rare
-// event, the synchronization overhead is negligible.
+// Adding the function to the vector must be done in a critical section to
+// be sure the vector keeps a coherent state.
 //
 // in: nVariables       Number of variables in the NLFSR
 template <>
