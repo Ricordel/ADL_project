@@ -9,7 +9,7 @@
 #include <errno.h>
 
 
-#define REPORT_ONLY_BIG 0
+#define REPORT_ONLY_BIG 1
 
 #define N_FUNCS_TO_REPORT 10
 

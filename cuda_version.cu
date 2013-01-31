@@ -7,9 +7,9 @@
 #include <stdint.h>
 #include <getopt.h>
 #include <cstdlib>
+#include <errno.h>
 
 #include "cudaMallocWrapper.hpp"
-#include "dbg.h"
 
 
 #define FUNCS_PER_KERNEL (1 << 18)
