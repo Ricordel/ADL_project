@@ -1,0 +1,10 @@
+32 variables: 0,11,(1,24),(9,10), cycle length: 4294943224, max poss length: 0
+32 variables: 0,7,(3,14),(14,27), cycle length: 4294913234, max poss length: 0
+32 variables: 0,15,(13,24),(25,29), cycle length: 4294850024, max poss length: 0
+32 variables: 0,3,(2,29),(15,19), cycle length: 4294847921, max poss length: 0
+32 variables: 0,15,(1,9),(10,12), cycle length: 4294846263, max poss length: 0
+32 variables: 0,2,(1,17),(22,25), cycle length: 4294817816, max poss length: 0
+32 variables: 0,10,(2,15),(23,31), cycle length: 4294810281, max poss length: 0
+32 variables: 0,14,(11,15),(15,17), cycle length: 4294792734, max poss length: 0
+32 variables: 0,11,(5,23),(18,25), cycle length: 4294751628, max poss length: 0
+32 variables: 0,3,(6,31),(17,18), cycle length: 4294741708, max poss length: 0
